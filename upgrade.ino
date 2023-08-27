@@ -1,19 +1,19 @@
 boolean checkUpdate(){
-  if(update_autoCheck){
+  if(_update_autoCheck){
     clientSecureBusy = true;
     bool needUpdate = false;
     if(mqttclientSecure.connected()){
       syslog("Disconnecting TLS MQTT connection to perform firmware version check", 0);
-      String mqtt_topic = "plan-d/" + String(apSSID);
+      String mqtt_topic = "data/devices/utility_meter";
       mqttclientSecure.publish(mqtt_topic.c_str(), "offline", true);
       mqttclientSecure.disconnect();
       mqttPaused = true;
     }
     if(bundleLoaded){
       syslog("Checking repository for firmware update... ", 0);
-      String checkUrl = "https://raw.githubusercontent.com/realto-energy/connect-p1dongle-firmware/";
-      if(dev_fleet) checkUrl += "develop/version";
-      else if(alpha_fleet) checkUrl += "alpha/version";
+      String checkUrl = "https://raw.githubusercontent.com/plan-d-io/P1-dongle/";
+      if(_dev_fleet) checkUrl += "develop/version";
+      else if(_alpha_fleet) checkUrl += "alpha/version";
       else checkUrl += "main/version";
       syslog("Connecting to " + checkUrl, 0);
       if (https.begin(*client, checkUrl)) {  
@@ -44,31 +44,31 @@ boolean checkUpdate(){
       needUpdate = true;
       syslog("Firmware update available", 1);
     }
-    else syslog("No firmware update available", 0);
+    else{
+      syslog("No firmware update available", 0);
+      mqttPaused = false;
+      if(_mqtt_en) connectMqtt();
+    }
     return needUpdate;
   }
 }
 
 boolean startUpdate(){
-  if(pls_en){
-    detachInterrupt(32);
-    detachInterrupt(26);
-  }
-  if(update_auto){
-    if(fw_ver < onlineVersion || update_start){
+  if(_update_auto){
+    if(fw_ver < onlineVersion || _update_start){
       syslog("Preparing firmware upgrade", 1);
       clientSecureBusy = true;
-      boolean mqttPaused; //,needUpdate
+      mqttPaused;
       if(mqttclientSecure.connected()){
         syslog("Disconnecting TLS MQTT connection to fetch firmware upgrade", 2);
         mqttclientSecure.disconnect();
         mqttPaused = true;
       }
       if(bundleLoaded){
-        String baseUrl ="https://raw.githubusercontent.com/realto-energy/connect-p1dongle-firmware/";
-        if(dev_fleet) baseUrl += "develop/bin/connect-p1dongle-firmware";
-        else if(alpha_fleet) baseUrl += "alpha/bin/connect-p1dongle-firmware";
-        else baseUrl += "main/bin/connect-p1dongle-firmware";
+        String baseUrl = "https://raw.githubusercontent.com/plan-d-io/P1-dongle/";
+        if(_dev_fleet) baseUrl += "develop/bin/P1-dongle";
+        else if(_alpha_fleet) baseUrl += "alpha/bin/P1-dongle";
+        else baseUrl += "main/bin/P1-dongle";
         String fileUrl = baseUrl + ".ino.bin"; //leaving this split up for now if we later want to do versioning in the filename
         syslog("Getting new firmware over HTTPS/TLS", 0);
         syslog("Found new firmware at "+ fileUrl, 0);
@@ -92,16 +92,15 @@ boolean startUpdate(){
                   syslog("Written : " + String(written) + " successfully", 0);
                 } else {
                   syslog("Written only : " + String(written) + "/" + String(contentLength) + ". Retry?", 3);
-                  update_start = false;
+                  _update_start = false;
                 }
                 if (Update.end()) {
                   if (Update.isFinished()) {
                     syslog("Firmware upgrade successfully completed. Rebooting to finish update.", 1);
-                    last_reset = "Firmware upgrade successfully completed. Rebooting to finish update";
+                    saveResetReason("Firmware upgrade successfully completed. Rebooting to finish update");
                     fw_ver = onlineVersion;
-                    update_start = false;
-                    update_finish = true;
-                    clientSecureBusy = false;
+                    _update_start = false;
+                    _update_finish = true;
                     saveConfig();
                     preferences.end();
                     SPIFFS.end();
@@ -109,17 +108,17 @@ boolean startUpdate(){
                     ESP.restart();
                   } else {
                     syslog("Firmware upgrade not finished? Something went wrong!", 3);
-                    update_start = false;
+                    _update_start = false;
                   }
                 } else {
                   syslog("Firmware upgrade error occurred. Error #: " + String(Update.getError()), 3);
-                  update_start = false;
+                  _update_start = false;
                 }
               } 
               else {
                 // Not enough space to begin OTA
                 syslog("Not enough space to begin OTA upgrade", 3);
-                update_start = false;
+                _update_start = false;
                 client->flush();
               }
               while (client->available()) {
@@ -131,38 +130,39 @@ boolean startUpdate(){
             }
             else{
               syslog("Could not connect to repository, HTTPS code " + String(https.errorToString(httpCode)), 2);
-              update_start = false;
+              _update_start = false;
               if(unitState < 6) unitState = 5;
             }
           } 
           else {
             syslog("Could not connect to repository, HTTPS code " + String(https.errorToString(httpCode)), 2);
-            update_start = false;
+            _update_start = false;
             if(unitState < 6) unitState = 5;
           }
           https.end(); 
         } 
         else {
           Serial.print("Unable to connect");
-          update_start = false;
+          _update_start = false;
           if(unitState < 6) unitState = 5;
         }
       }
       client->stop();
       clientSecureBusy = false;
       if(mqttPaused){
+        mqttPaused = false;
         sinceConnCheck = 10000;
       }
-      update_start = false;
+      _update_start = false;
       return true;
     }
     else{
       syslog("No firmware upgrade available", 0);
-      update_start = false;
+      _update_start = false;
       if(unitState < 5) unitState = 4;
       return false;
     }
-    update_start = false;
+    _update_start = false;
     saveConfig();
     delay(500);
     return true;
@@ -170,12 +170,8 @@ boolean startUpdate(){
 }
 
 boolean finishUpdate(bool restore){
-  if(pls_en){
-    detachInterrupt(32);
-    detachInterrupt(26);
-  }
   clientSecureBusy = true;
-  boolean mqttPaused;
+  mqttPaused;
   boolean filesUpdated = false;
   if(mqttclientSecure.connected()){
     syslog("Disconnecting TLS MQTT connection to fetch update", 2);
@@ -184,15 +180,15 @@ boolean finishUpdate(bool restore){
   }
   if(bundleLoaded){
     syslog("Finishing upgrade. Preparing to download static files.", 1);
-    String baseUrl = "https://raw.githubusercontent.com/realto-energy/connect-p1dongle-firmware/";
-    if(dev_fleet) baseUrl += "develop";
-    else if(alpha_fleet) baseUrl += "alpha";
+    String baseUrl = "https://raw.githubusercontent.com/plan-d-io/P1-dongle/";
+    if(_dev_fleet) baseUrl += "develop";
+    else if(_alpha_fleet) baseUrl += "alpha";
     else baseUrl += "main";
     String fileUrl = baseUrl + "/bin/";
     if(restore) fileUrl += "restore";
     else fileUrl += "files";
     String payload;
-    if (https.begin(*client, fileUrl)) {  
+    if (https.begin(*client, fileUrl)) {
       int httpCode = https.GET();
       if (httpCode > 0) {
         if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
@@ -213,9 +209,9 @@ boolean finishUpdate(bool restore){
         while(delimEnd < eof){
           delimEnd = payload.indexOf('\n', delimStart);
           String s = "/";
-          String temp = payload.substring(delimStart, delimEnd); //temp fix, see below
+          String temp = payload.substring(delimStart, delimEnd);
           if(restore) s += payload.substring(delimStart, delimEnd-1);
-          else s += payload.substring(delimStart, delimEnd);
+          else s += payload.substring(delimStart, delimEnd-1);
           delimStart = delimEnd+1;
           fileUrl = baseUrl + "/data" + s;
           Serial.println(fileUrl);
@@ -240,6 +236,7 @@ boolean finishUpdate(bool restore){
                 else{
                   syslog("Could not fetch file, HTTPS code " + String(httpCode), 2);
                   if(httpCode == 400 || httpCode == 404){ //temp fix till we can figure out the issue with non-deterministic behaviour of line-endings (github encoding?)
+                    Serial.println("retrying");
                     https.end();
                     s = "/";
                     s += temp;
@@ -249,6 +246,7 @@ boolean finishUpdate(bool restore){
                     if (s) {
                       if (https.begin(*client, fileUrl)) {
                         httpCode = https.GET();
+                        Serial.println(httpCode);
                         if (httpCode > 0) {
                           if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
                             SPIFFS.remove(s);
@@ -266,8 +264,14 @@ boolean finishUpdate(bool restore){
                           }
                         }
                       }
+                      else{
+                        Serial.println("could not start client");
+                      }
                     }
-                    
+                    else {
+                      Serial.print("No s: ");
+                      Serial.println(s);
+                    }                    
                   }
                 }
               } 
@@ -292,23 +296,23 @@ boolean finishUpdate(bool restore){
   }
   client->stop();
   clientSecureBusy = false;
-  update_finish = false;
+  _update_finish = false;
   if(filesUpdated){
-    update_finish = false;
-    if(restore_finish) restore_finish = false;
+    _update_finish = false;
+    if(_restore_finish) _restore_finish = false;
     syslog("Static files successfully updated. Rebooting to finish update.", 1);
-    last_reset = "Static files successfully updated. Rebooting to finish update.";
+    saveResetReason("Static files successfully updated. Rebooting to finish update.");
     saveConfig();
-    preferences.end();
     SPIFFS.end();
     delay(500);
     ESP.restart();
   }
   if(mqttPaused){
+    mqttPaused = false;
     sinceConnCheck = 10000;
   }
   saveConfig();
-  unitState = 4;
+  //if(unitState < 6) unitState = 5; //what?
   delay(500);
   return true;
 }

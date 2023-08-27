@@ -1,7 +1,7 @@
 boolean scanWifi(){
   syslog("Performing wifi scan", 0);
   int16_t n = WiFi.scanNetworks();
-  String savedSSID = wifi_ssid;
+  String savedSSID = _wifi_ssid;
   boolean foundSavedSSID = false;
   String buildSSIDlist = "";
   for (int i = 0; i < n; ++i) {
@@ -34,17 +34,14 @@ String getHostname(){
   WiFi.macAddress(mac);
   char macbuf[] = "00000";
   String macbufs = "";
-  macbufs += String(mac[3], HEX);
   macbufs += String(mac[4], HEX);
   macbufs += String(mac[5], HEX);
   macbufs.toUpperCase();
-  macbufs.toCharArray(macbuf, 7);
-  apSSID[2] = macbuf[0];
-  apSSID[3] = macbuf[1];
-  apSSID[4] = macbuf[2];
-  apSSID[5] = macbuf[3];
-  apSSID[6] = macbuf[4];
-  apSSID[7] = macbuf[5];
+  macbufs.toCharArray(macbuf, 5);
+  apSSID[4] = macbuf[0];
+  apSSID[5] = macbuf[1];
+  apSSID[6] = macbuf[2];
+  apSSID[7] = macbuf[3];
   return macbufs;
 }
 
@@ -75,11 +72,11 @@ void initSPIFFS(){
   }
   syslog("----------------------------", 1);
   if(spiffsMounted){
-    reinit_spiffs = false;
+    _reinit_spiffs = false;
     saveConfig();
   }
-  else if(!reinit_spiffs && !spiffsMounted){ //if SPIFFS couldn't be mounted, try a restart first
-    reinit_spiffs = true;
+  else if(!_reinit_spiffs && !spiffsMounted){ //if SPIFFS couldn't be mounted, try a restart first
+    _reinit_spiffs = true;
     saveConfig();
     delay(500);
     ESP.restart();
@@ -87,20 +84,20 @@ void initSPIFFS(){
 }
 
 void initWifi(){
-  if(wifiSTA){
+  if(_wifi_STA){
     syslog("WiFi mode: station", 1);
     WiFi.mode(WIFI_STA);
-    WiFi.begin(wifi_ssid.c_str(), wifi_password.c_str());
+    WiFi.begin(_wifi_ssid.c_str(), _wifi_password.c_str());
     WiFi.setHostname("p1dongle");
     elapsedMillis startAttemptTime;
-    syslog("Attempting connection to WiFi network " + wifi_ssid, 0);
+    syslog("Attempting connection to WiFi network " + _wifi_ssid, 0);
     while (WiFi.status() != WL_CONNECTED && startAttemptTime < 20000) {
       delay(200);
       Serial.print(".");
     }
     Serial.println("");
     if(WiFi.status() == WL_CONNECTED){
-      syslog("Connected to the WiFi network " + wifi_ssid, 1);
+      syslog("Connected to the WiFi network " + _wifi_ssid, 1);
       MDNS.begin("p1dongle");
       if(spiffsMounted) unitState = 4;
       else unitState = 7;
@@ -133,23 +130,22 @@ void initWifi(){
         unitState = 7;
         httpsError = true;
       }
-      if(update_start){
+      if(_update_start){
         unitState = -1;
         startUpdate();
       }
-      if(update_finish){
+      if(_update_finish){
         unitState = -1;
         finishUpdate(false);
       }
-      if(restore_finish || !spiffsMounted){
+      if(_restore_finish || !spiffsMounted){
         unitState = -1;
         finishUpdate(true);
       }
-      if(mqtt_en) setupMqtt();
+      if(_mqtt_en) setupMqtt();
       sinceConnCheck = 60000;
-      server.addHandler(new WebRequestHandler());
-      update_autoCheck = true;
-      if(update_autoCheck) {
+      _update_autoCheck = true;
+      if(_update_autoCheck) {
         sinceUpdateCheck = 86400000-60000;
       }
       syslog("Local IP: " + WiFi.localIP().toString(), 0);
@@ -157,17 +153,16 @@ void initWifi(){
     else{
       syslog("Could not connect to the WiFi network", 2);
       wifiError = true;
-      wifiSTA = false;
+      _wifi_STA = false;
       unitState = 1;
     }
   }
-  if(!wifiSTA){
+  if(!_wifi_STA){
     syslog("WiFi mode: access point", 1);
     WiFi.mode(WIFI_AP);
     WiFi.softAP("p1dongle");
     dnsServer.start(53, "*", WiFi.softAPIP());
     MDNS.begin("p1dongle");
-    server.addHandler(new WebRequestHandler()).setFilter(ON_AP_FILTER);//only when requested from AP
     syslog("AP set up", 1);
     unitState = 0;
   }
@@ -208,44 +203,44 @@ void setClock(boolean firstSync)
   }
 }
 
-void setMeterTime(){
-  if(mTimeFound){
-    if(!timeSet) syslog("Syncing to to metertime", 0);
-    localtime(&dm_timestamp);
-    timeSet = true;
-  }
-}
-
 void checkConnection(){
   if(WiFi.status() != WL_CONNECTED){
     syslog("Lost WiFi connection, trying to reconnect", 2);
     WiFi.disconnect();
+    wifiError = true;
+    mqttClientError = true;
     elapsedMillis restartAttemptTime;
     while (WiFi.status() != WL_CONNECTED && restartAttemptTime < 20000) {
-      WiFi.reconnect();
+      WiFi.begin(_wifi_ssid.c_str(), _wifi_password.c_str());
     }
     if(restartAttemptTime >= 20000) {
       syslog("Wifi reconnection failed! Trying again in a minute", 3);
       reconncount++;
-      wifiError = true;
     }
   }
   if(wifiError && WiFi.status() == WL_CONNECTED){
     wifiError = false;
     syslog("Reconnected to the WiFi network", 0);
-    if(!mqtt_en) reconncount = 0;
+    reconncount = 0;
   }
   if(WiFi.status() == WL_CONNECTED){
-    if(mqtt_en){
-      connectMqtt();
-      if(ha_en && !ha_metercreated) haAutoDiscovery(1);
-      else if(ha_en && ha_metercreated) haAutoDiscovery(0);
+    if(_mqtt_en){
+      if(mqttPushFails > 5){
+        mqttClientError = true;
+        syslog("MQTT client connection failed", 4);
+        mqttPushFails = 0;
+        reconncount++;
+      }
+      if(mqttHostError) setupMqtt();
+      else connectMqtt();
     }
   }
 }
 
 void setReboot(){
   sinceConnCheck = 0;
+  syslog("Removing Home Assistant entities", 0);
+  //haAutoDiscovery(3); CHECKTHIS
   syslog("Saving configuration", 0);
   saveConfig();
   preferences.end();
@@ -255,18 +250,11 @@ void setReboot(){
   syslog("Rebooting", 2);
 }
 
-void forcedReset(){
-// use the watchdog timer to do a hard restart
-// It sets the wdt to 1 second, adds the current process and then starts an
-// infinite loop.
-  esp_task_wdt_init(1, true);
-  esp_task_wdt_add(NULL);
-  while(true);  // wait for watchdog timer to be triggered
-}
-
 double round2(double value) {
    return (int)(value * 100 + 0.05) / 100.0;
 }
+
+/*SPIFFS file utilities*/
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
     Serial.printf("Listing directory: %s\r\n", dirname);
     File root = fs.open(dirname);

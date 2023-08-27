@@ -32,11 +32,6 @@ const char* github_root_ca= \
 
 void restoreSPIFFS(){
   listDir(SPIFFS, "/", 0);
-  /*Detach pulse interrupts as they interfere with SPIFFS writes*/
-  if(pls_en){
-    detachInterrupt(32);
-    detachInterrupt(26);
-  }
   /*Reformat the SPIFFS*/
   syslog("Formatting", 0);
   bool formatted = SPIFFS.format();
@@ -56,9 +51,9 @@ void restoreSPIFFS(){
   }
   /*Next, store a file to SPIFFS*/
   syslog("Downloading cert bundle", 0);
-  String baseUrl = "https://raw.githubusercontent.com/realto-energy/connect-p1dongle-firmware/";
-  if(dev_fleet) baseUrl += "develop";
-  else if(alpha_fleet) baseUrl += "alpha";
+  String baseUrl = "https://raw.githubusercontent.com/plan-d-io/P1-dongle/";
+  if(_dev_fleet) baseUrl += "develop";
+  else if(_alpha_fleet) baseUrl += "alpha";
   else baseUrl += "main";
   String fileUrl = baseUrl + "/data/cert/x509_crt_bundle.bin";
   String s = "/cert/x509_crt_bundle.bin";
@@ -99,9 +94,8 @@ void restoreSPIFFS(){
   file.close();
   bundleLoaded = true;
   /*Download the other static files*/
-  restore_finish = true;
+  _restore_finish = true;
   saveConfig();
-  preferences.end();
   SPIFFS.end();
   delay(500);
   ESP.restart();
