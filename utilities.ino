@@ -34,14 +34,17 @@ String getHostname(){
   WiFi.macAddress(mac);
   char macbuf[] = "00000";
   String macbufs = "";
+  macbufs += String(mac[3], HEX);
   macbufs += String(mac[4], HEX);
   macbufs += String(mac[5], HEX);
   macbufs.toUpperCase();
-  macbufs.toCharArray(macbuf, 5);
-  apSSID[4] = macbuf[0];
-  apSSID[5] = macbuf[1];
-  apSSID[6] = macbuf[2];
-  apSSID[7] = macbuf[3];
+  macbufs.toCharArray(macbuf, 7);
+  apSSID[2] = macbuf[0];
+  apSSID[3] = macbuf[1];
+  apSSID[4] = macbuf[2];
+  apSSID[5] = macbuf[3];
+  apSSID[6] = macbuf[4];
+  apSSID[7] = macbuf[5];
   return macbufs;
 }
 
@@ -101,6 +104,11 @@ void initWifi(){
       MDNS.begin("p1dongle");
       if(spiffsMounted) unitState = 4;
       else unitState = 7;
+      /*Add WiFi events to immediately detect WiFi changes*/
+      WiFi.onEvent(WiFiEvent, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_LOST_IP);
+      WiFi.onEvent(WiFiEvent, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE);
+      WiFi.onEvent(WiFiEvent, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+      /*Advertise over mDNS this dongle can be accessed at port 80*/
       MDNS.addService("http", "tcp", 80);
       /*Start NTP time sync*/
       setClock(true);
@@ -203,6 +211,13 @@ void setClock(boolean firstSync)
   }
 }
 
+void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info){
+  Serial.println("Disconnected from WiFi access point");
+  Serial.print("WiFi lost connection. Reason: ");
+  Serial.println(info.wifi_sta_disconnected.reason);
+  sinceConnCheck = 60000;
+}
+
 void checkConnection(){
   if(WiFi.status() != WL_CONNECTED){
     syslog("Lost WiFi connection, trying to reconnect", 2);
@@ -224,6 +239,7 @@ void checkConnection(){
     reconncount = 0;
   }
   if(WiFi.status() == WL_CONNECTED){
+    wifiRSSI = WiFi.RSSI();
     if(_mqtt_en){
       if(mqttPushFails > 5){
         mqttClientError = true;

@@ -97,12 +97,13 @@ elapsedMillis sinceConnCheck, sinceUpdateCheck, sinceClockCheck, sinceLastUpload
 
 //General housekeeping vars
 unsigned int reconncount, remotehostcount, telegramCount;
+int wifiRSSI;
 String resetReason;
 float freeHeap, minFreeHeap, maxAllocHeap;
 String ssidList;
-char apSSID[] = "COFY0000";
+char apSSID[] = "P1000000";
 byte mac[6];
-bool rebootReq, rebootInit;
+bool rebootInit;
 bool mqttHostError = true;
 bool mqttClientError = true;
 
@@ -129,6 +130,7 @@ void setup(){
   syslog("Digital meter dongle booting", 0);
   restoreConfig();
   initSPIFFS();
+  externalIntegrationsBootstrap();
   syslog("Digital meter dongle " + String(apSSID) +" V" + String(fw_ver/100.0) + " by plan-d.io", 1);
   if(_dev_fleet) syslog("Using experimental (development) firmware", 2); //change this to one variable, but keep legacy compatibility intact
   if(_alpha_fleet) syslog("Using pre-release (alpha) firmware", 0);
@@ -145,34 +147,19 @@ void setup(){
   scanWifi();
   server.addHandler(new WebRequestHandler());
   server.begin();
-  _key_pushlist = 65534;//511;
-  _mbus_pushlist = 136;
-  _payload_format = 3; 
-  sinceConnCheck = 60000;
-  sinceMeterCheck = 0;
-  _upload_throttle = 10;
-  sinceLastUpload = _upload_throttle*1000;
-  _realto_en = true;
 }
 
 void loop(){
   blinkLed();
-  if(_mqtt_tls){
-    mqttclientSecure.loop();
-  }
-  else{
-    mqttclient.loop();
-  }
   if(wifiScan) scanWifi();
   if(sinceRebootCheck > 2000){
     if(rebootInit){
-      if(!clientSecureBusy){
-        ESP.restart();
-      } 
+      ESP.restart();
     }
     sinceRebootCheck = 0;
   }
   if(_trigger_type == 0){
+    /*Continous triggering of meter telegrams*/
     if(sinceMeterCheck > 30000){
       if(!meterError) syslog("Meter disconnected", 2);
       meterError = true;
@@ -182,6 +169,7 @@ void loop(){
     }
   }
   else if(_trigger_type == 1){
+    /*On demand triggering of meter telegram*/
     if(sinceTelegramRequest >= _trigger_interval *1000){
       digitalWrite(TRIGGER, HIGH);
       sinceTelegramRequest = 0;
@@ -195,6 +183,7 @@ void loop(){
     }
   }
   if(!_wifi_STA){
+    /*If dongle is in access point mode*/
     dnsServer.processNextRequest();
     if(sinceWifiCheck >= 600000){
       if(scanWifi()) rebootInit = true;
@@ -206,7 +195,17 @@ void loop(){
     }
   }
   else{
+    /*If dongle is connected to wifi*/
     if(!bundleLoaded) restoreSPIFFS();
+    if(_mqtt_en){
+      if(_mqtt_tls){
+        mqttclientSecure.loop();
+      }
+      else{
+        mqttclient.loop();
+      }
+      if(_realto_en) realtoUpload();
+    }
     if(_update_autoCheck && sinceUpdateCheck >= 86400000){
       updateAvailable = checkUpdate();
       if(updateAvailable) startUpdate();
@@ -249,14 +248,15 @@ void loop(){
     }
   }
   prevButtonState = M5.Btn.isPressed();
-  if (HWSERIAL.available() > 0) {
-    String s=HWSERIAL.readStringUntil('!');
-    s = s + '\n';
+  if(HWSERIAL.available() > 0) {
+    /*Read the received meter telegram. A telegram ends on the '!' character, followed by a 4-digit CRC16 value*/
+    String telegram=HWSERIAL.readStringUntil('!');
+    telegram = telegram + '\n';
     String crc =  HWSERIAL.readStringUntil('\n');
     if(_trigger_type == 1){
       digitalWrite(TRIGGER, LOW);
       sinceTelegramRequest = 0;
     }
-    processMeterTelegram(s, crc);
+    processMeterTelegram(telegram, crc);
   }
 }

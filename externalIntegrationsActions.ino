@@ -2,6 +2,7 @@
 
 void externalIntegrationsBootstrap(){
   /*Put variables that need to be initted at boot here*/
+  _realto_en = true;
   _key_pushlist = 65534;//511;
   _mbus_pushlist = 136;
   _payload_format = 3; 
@@ -55,6 +56,9 @@ bool realtoUpload(){
     String realtoOutput;
     serializeJson(realtoData, realtoOutput);
     /*Push the JSON string over MQTT*/
+    Serial.print(tempTopic);
+    Serial.print(" ");
+    Serial.println(realtoOutput);
     if(pubMqtt(tempTopic, realtoOutput, "false")){
       lastRealtoUpload = 0;
       realtoUploadTries = 0;

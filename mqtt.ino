@@ -87,13 +87,13 @@ void connectMqtt() {
     // Loop until we're (re)connected
     int mqttretry = 0;
     bool disconnected = false;
-    if(_mqtt_tls && !clientSecureBusy){
+    if(_mqtt_tls){
       if(mqttClientError) mqttclientSecure.disconnect();
       if(!mqttclientSecure.connected()) {
         disconnected = true;
         if(mqttWasConnected){
           if(!mqttPaused){
-            syslog("Lost connection to secure MQTT broker", 2);
+            syslog("Lost connection to secure MQTT broker", 4);
             if(unitState < 6) unitState = 5;
           }
         }
@@ -116,7 +116,7 @@ void connectMqtt() {
         disconnected = true;
         if(mqttWasConnected){
           if(!mqttPaused){
-            syslog("Lost connection to MQTT broker", 2);
+            syslog("Lost connection to MQTT broker", 4);
             if(unitState < 6) unitState = 5;
           }
         }
@@ -159,7 +159,7 @@ void connectMqtt() {
         reconncount = 0;
       }
       else{
-        syslog("Failed to connect to MQTT broker", 3);
+        syslog("Failed to connect to MQTT broker", 4);
         mqttClientError = true;
         if(unitState < 6) unitState = 5;
       }
@@ -170,7 +170,7 @@ void connectMqtt() {
 bool pubMqtt(String topic, String payload, boolean retain){
   bool pushed = false;
   if(_mqtt_en && !mqttClientError && !mqttHostError){
-    if(_mqtt_tls && !clientSecureBusy){
+    if(_mqtt_tls){
       if(mqttclientSecure.connected()){
         if(mqttclientSecure.publish(topic.c_str(), payload.c_str(), retain)){
           mqttPushFails = 0;
