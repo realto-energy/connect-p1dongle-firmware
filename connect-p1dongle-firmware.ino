@@ -114,8 +114,6 @@ boolean timeSet, spiffsMounted;
 uint8_t prevButtonState = false;
 
 
-
-
 void setup(){
   M5.begin(true, false, true);
   delay(2000);
@@ -154,6 +152,7 @@ void setup(){
   sinceMeterCheck = 0;
   _upload_throttle = 10;
   sinceLastUpload = _upload_throttle*1000;
+  _realto_en = true;
 }
 
 void loop(){

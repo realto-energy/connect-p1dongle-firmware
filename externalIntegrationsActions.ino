@@ -25,9 +25,9 @@ void externalIntegrationsBootstrap(){
 }
 
 bool realtoUpload(){
-  if(lastRealtoUpload > _realtoThrottle){
-    String availabilityTopic = _mqtt_prefix.substring(0, _mqtt_prefix.length()-1);
-    pubMqtt(availabilityTopic, "online", false);
+  if(lastRealtoUpload > _upload_throttle*1000){
+    String tempTopic = _mqtt_prefix.substring(0, _mqtt_prefix.length()-1);
+    pubMqtt(tempTopic, "online", false);
     DynamicJsonDocument realtoData(1024);
     realtoData["timestamp"] = meterTimestamp;
     for(int i = 0; i < sizeof(dsmrKeys)/sizeof(dsmrKeys[0]); i++){
@@ -40,10 +40,22 @@ bool realtoUpload(){
         }
       }
     }
+    for(int i = 0; i < sizeof(mbusMeter)/sizeof(mbusMeter[0]); i++){
+      for(int j = 0; j < sizeof(realtoKeys)/sizeof(realtoKeys[0]); j++){
+        if(mbusMeter[i].mbusKey == realtoKeys[j]){
+          if(mbusMeter[i].keyFound == true){
+            realtoData[realtoKeys[j]]["value"] = mbusMeter[i].keyValueFloat;
+            if(mbusMeter[i].type == 3 || mbusMeter[i].type == 7) realtoData[realtoKeys[j]]["unit"] = "m³";
+            else if (mbusMeter[i].type == 7) realtoData[realtoKeys[j]]["unit"] = "kWh";
+          }
+        }
+      }
+    }
+    tempTopic = tempTopic + "/data/readings";
     String realtoOutput;
     serializeJson(realtoData, realtoOutput);
     /*Push the JSON string over MQTT*/
-    if(pubMqtt(_mqtt_prefix.substring(0, _mqtt_prefix.length()-1), realtoOutput, "false")){
+    if(pubMqtt(tempTopic, realtoOutput, "false")){
       lastRealtoUpload = 0;
       realtoUploadTries = 0;
     }
