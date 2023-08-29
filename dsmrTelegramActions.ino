@@ -4,8 +4,8 @@ void onTelegram(){
   /*This function is executed whenever a meter telegram containing a meterID and meterTimestamp is received.
    * Use this function if you want the most recent meter updates
    */
-  printTelegramValues();
-  mqttPushTelegramValues();
+  //printTelegramValues();
+  //mqttPushTelegramValues();
 }
 
 void onTelegramCrc(){

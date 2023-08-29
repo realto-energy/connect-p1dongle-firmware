@@ -1,5 +1,6 @@
-/*These bespoke structures are used to construct non-volatile (NVS) data storages for each data type*/
+/*In this file you can add and configure global variables stored in non-volatile (NVS) data storage*/
 
+/*The following bespoke structures are used to construct NVS data storages for each data type*/
 struct boolStore{
    String varName;
    bool* var;

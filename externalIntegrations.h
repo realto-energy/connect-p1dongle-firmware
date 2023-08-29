@@ -1,4 +1,4 @@
-/*Add third-party, external integrations and their configuration options here*/
+/*Add third-party, external integrations configuration options here*/
 
 /* Add additional COFY field to the MQTT payload */
 static const String cofyKeys[][ 3 ] PROGMEM = {

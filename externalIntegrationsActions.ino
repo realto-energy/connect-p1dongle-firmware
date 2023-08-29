@@ -1,3 +1,28 @@
+/*External integrations to process meter readings*/
+
+void externalIntegrationsBootstrap(){
+  /*Put variables that need to be initted at boot here*/
+  _key_pushlist = 65534;//511;
+  _mbus_pushlist = 136;
+  _payload_format = 3; 
+  _upload_throttle = 10;
+  sinceLastUpload = _upload_throttle*1000;
+  if(_realto_en){
+    _mqtt_en = true;
+    _mqtt_host = "realto.s2.eu.hivemq.cloud";
+    _mqtt_port = 8883;
+    _mqtt_tls = true;
+    _mqtt_auth = true;
+    _mqtt_user = "realto-mqtt-client";
+    _mqtt_pass = "FCACq.w_CwLgZgxg_9oz";
+    _upload_throttle = 60;
+    _mqtt_id = apSSID;
+    _ha_en = false;
+    _mqtt_prefix = "plan-d/" + String(apSSID) +"/";
+    _update_auto = true;
+    _update_autoCheck = true;
+  }
+}
 
 bool realtoUpload(){
   if(lastRealtoUpload > _realtoThrottle){
