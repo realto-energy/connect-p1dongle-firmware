@@ -144,7 +144,6 @@ void setup(){
   syslog("Last reset reason (firmware): " + _last_reset, 1);
   debugInfo = true;
   initWifi();
-  scanWifi();
   server.addHandler(new WebRequestHandler());
   server.begin();
 }
@@ -186,6 +185,8 @@ void loop(){
     /*If dongle is in access point mode*/
     dnsServer.processNextRequest();
     if(sinceWifiCheck >= 600000){
+      /*If dongle is in AP mode, check every once in a while if the configured wifi SSID can't be detected
+       * If so, reboot so the dongle starts up again in connected STA mode. */
       if(scanWifi()) rebootInit = true;
       sinceWifiCheck = 0;
     }

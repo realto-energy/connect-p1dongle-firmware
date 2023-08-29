@@ -1,7 +1,7 @@
 /*The webserver client and its handlers live here*/
 #include "SPIFFS.h"
 extern bool findInConfig(String, int&, int&), processConfigJson(String, String&, bool), processConfigString(String, String&, bool), storeConfigVar(String, int, int);
-extern String returnConfigVar(String, int, int, bool), returnConfig(), returnSvg();
+extern String returnConfigVar(String, int, int, bool), returnConfig(), returnSvg(), ssidList;
 class WebRequestHandler : public AsyncWebHandler {
 public:
   WebRequestHandler() {}
@@ -33,7 +33,7 @@ void WebRequestHandler::handleBody(AsyncWebServerRequest *request, uint8_t *data
         Serial.println(data[0]);
         String jsonResponse;
         if(processConfigJson((const char*)data, jsonResponse, true)){
-          request->send(200, "text/plain", jsonResponse);
+          request->send(200, "application/json", jsonResponse);
         }
         /*If not, check if it is a configuration string (e.g. form POST).*/
         else{
@@ -41,10 +41,13 @@ void WebRequestHandler::handleBody(AsyncWebServerRequest *request, uint8_t *data
           String safeString = (const char*)data;
           safeString = safeString.substring(0, total);
           processConfigString(safeString, configResponse, true);
-          if(configResponse != "") request->send(200, "text/plain", configResponse);
+          if(configResponse != "") request->send(200, "application/json", configResponse);
           else request->send(404, "text/plain");
         }
         //request->send(200, "text/plain", "post");
+      }
+      else if(request->url() == "/ssid" || request->url() == "/ssid/"){
+        request->send(200, "application/json", ssidList);
       }
     }
     else request->send(404, "text/plain");
@@ -61,7 +64,7 @@ void WebRequestHandler::handleRequest(AsyncWebServerRequest *request){
       /*Request to query or update the configuration. First check if the request has arguments corresponding to NVS key names*/
       if(params == 0){
         /*If not, return the full configuration as JSON*/
-        request->send(200, "text/plain", returnConfig()); 
+        request->send(200, "application/json", returnConfig()); 
       }
       else{
         String response, foundInConfig;
@@ -87,7 +90,7 @@ void WebRequestHandler::handleRequest(AsyncWebServerRequest *request){
           response = response.substring(0, response.length()-1);
           response = "{" + response;
           response += "}";
-          request->send(200, "text/plain", response);
+          request->send(200, "application/json", response);
         }
         else request->send(404, "text/plain");
       }

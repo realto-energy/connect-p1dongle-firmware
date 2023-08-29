@@ -178,6 +178,10 @@ bool pubMqtt(String topic, String payload, boolean retain){
         }
         else mqttPushFails++;
       }
+      else{
+        mqttClientError = true;
+        sinceConnCheck = 60000;
+      }
     }
     else{
       if(mqttclient.connected()){
@@ -186,6 +190,10 @@ bool pubMqtt(String topic, String payload, boolean retain){
           pushed = true;
         }
         else mqttPushFails++;
+      }
+      else{
+        mqttClientError = true;
+        sinceConnCheck = 60000;
       }
     }
   }

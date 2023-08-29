@@ -3,30 +3,29 @@ boolean scanWifi(){
   int16_t n = WiFi.scanNetworks();
   String savedSSID = _wifi_ssid;
   boolean foundSavedSSID = false;
+  //String buildSSIDlist = "{\"SSIDs\": [";
   String buildSSIDlist = "";
   for (int i = 0; i < n; ++i) {
     if(WiFi.SSID(i) != savedSSID){
-      buildSSIDlist += "<option value=\"";
+      buildSSIDlist += "\"";
       buildSSIDlist += WiFi.SSID(i);
-      buildSSIDlist += "\">";
-      buildSSIDlist += WiFi.SSID(i);
-      buildSSIDlist += "</option>";
+      buildSSIDlist += "\"";
+      if(i < n - 1) buildSSIDlist += ", ";
     }
     else{
-      foundSavedSSID = true;
+      foundSavedSSID = true; //if the previously saved SSID is detected, make sure to put it first in the option list
     }
   }
-  buildSSIDlist += "</select>";  
-  ssidList = "<select name=\"ssid\">";
+  buildSSIDlist += "]}";
+  String ssidListStart = "{\"SSIDs\": [";
   if(foundSavedSSID){
-    ssidList += "<option value=\"";
-    ssidList += savedSSID;
-    ssidList += "\">";
-    ssidList += savedSSID;
-    ssidList += "</option>";
+    ssidListStart += "\"";
+    ssidListStart += savedSSID;
+    ssidListStart += "\",";
   }
-  ssidList += buildSSIDlist;
+  ssidList = ssidListStart + buildSSIDlist;
   wifiScan = false;
+  WiFi.scanDelete();
   return foundSavedSSID;
 }
 
@@ -87,6 +86,7 @@ void initSPIFFS(){
 }
 
 void initWifi(){
+  scanWifi();
   if(_wifi_STA){
     syslog("WiFi mode: station", 1);
     WiFi.mode(WIFI_STA);
@@ -212,6 +212,7 @@ void setClock(boolean firstSync)
 }
 
 void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info){
+  /*If a change in WiFi happens, skip immediately to checking the connection*/
   Serial.println("Disconnected from WiFi access point");
   Serial.print("WiFi lost connection. Reason: ");
   Serial.println(info.wifi_sta_disconnected.reason);
