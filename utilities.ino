@@ -3,13 +3,12 @@ boolean scanWifi(){
   int16_t n = WiFi.scanNetworks();
   String savedSSID = _wifi_ssid;
   boolean foundSavedSSID = false;
-  //String buildSSIDlist = "{\"SSIDs\": [";
   String buildSSIDlist = "";
   for (int i = 0; i < n; ++i) {
     if(WiFi.SSID(i) != savedSSID){
-      buildSSIDlist += "\"";
+      buildSSIDlist += "{\"SSID\": \"";
       buildSSIDlist += WiFi.SSID(i);
-      buildSSIDlist += "\"";
+      buildSSIDlist += "\"}";
       if(i < n - 1) buildSSIDlist += ", ";
     }
     else{
@@ -17,11 +16,11 @@ boolean scanWifi(){
     }
   }
   buildSSIDlist += "]}";
-  String ssidListStart = "{\"SSIDs\": [";
+  String ssidListStart = "{\"SSIDlist\": [";
   if(foundSavedSSID){
-    ssidListStart += "\"";
+    ssidListStart += "{\"SSID\": \"";
     ssidListStart += savedSSID;
-    ssidListStart += "\",";
+    ssidListStart += "\"},";
   }
   ssidList = ssidListStart + buildSSIDlist;
   wifiScan = false;
@@ -114,10 +113,13 @@ void initWifi(){
       setClock(true);
       printLocalTime(true);
       if(client){
+        Serial.println(ESP.getFreeHeap());
         syslog("Setting up TLS/SSL client", 0);
+        Serial.println(ESP.getFreeHeap());
         client->setUseCertBundle(true);
         // Load certbundle from SPIFFS
-        File file = SPIFFS.open("/cert/x509_crt_bundle.bin");
+        File file = SPIFFS.open("/cert/x509_crt_bundle.bin", "r");
+        Serial.println(ESP.getFreeHeap());
         if(!file || file.isDirectory()) {
             syslog("Could not load cert bundle from SPIFFS", 3);
             bundleLoaded = false;
@@ -126,12 +128,14 @@ void initWifi(){
         // Load loadCertBundle into WiFiClientSecure
         if(file && file.size() > 0) {
             if(!client->loadCertBundle(file, file.size())){
+                Serial.println(ESP.getFreeHeap());
                 syslog("WiFiClientSecure: could not load cert bundle", 3);
                 bundleLoaded = false;
                 unitState = 7;
             }
         }
         file.close();
+        Serial.println(ESP.getFreeHeap());
       } 
       else {
         syslog("Unable to create SSL client", 2);

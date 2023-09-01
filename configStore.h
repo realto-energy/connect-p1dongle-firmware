@@ -71,6 +71,7 @@ String _ha_device;
 unsigned long _realtoThrottle;
 /*Placeholder vars*/
 float _tempFloat;
+String _tempString;
 
 /*The configuration data stores for every data type.
  * Format: { "User-readable name", global variable name (reference), "NVS key name", default value }
@@ -120,7 +121,8 @@ static const stringStore configString[] PROGMEM = {
   {"MQTT username", &_mqtt_user, "MQTT_USER", ""},
   {"MQTT topic prefix", &_mqtt_prefix, "MQTT_PFIX", "data/devices/beta_meter/"},
   {"HA device name", &_ha_device, "HA_DEVICE", "Beta meter"},
-  {"Last reset reason (firmware)", &_last_reset, "LAST_RESET", ""}
+  {"Last reset reason (firmware)", &_last_reset, "LAST_RESET", ""},
+  {"Temp string", &_tempString, "TMP_STR", ""}
 };
 
 static const stringStore configPass[] PROGMEM = {

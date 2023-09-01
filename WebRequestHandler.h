@@ -2,6 +2,7 @@
 #include "SPIFFS.h"
 extern bool findInConfig(String, int&, int&), processConfigJson(String, String&, bool), processConfigString(String, String&, bool), storeConfigVar(String, int, int);
 extern String returnConfigVar(String, int, int, bool), returnConfig(), returnSvg(), ssidList;
+extern const char test_html[];
 class WebRequestHandler : public AsyncWebHandler {
 public:
   WebRequestHandler() {}
@@ -22,32 +23,32 @@ bool WebRequestHandler::canHandle(AsyncWebServerRequest *request){
 void WebRequestHandler::handleBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
   /*Handler for POST and PUT requests (with a body)*/
   if(request->method() == 2 || request->method() == 4){
-    Serial.print("First char: ");
-    Serial.println(data[0]);
     Serial.print("POST/PUT to ");
     Serial.println(request->url());
+    int headers = request->headers();
+    int i;
+    for(i=0;i<headers;i++){
+      AsyncWebHeader* h = request->getHeader(i);
+      Serial.printf("HEADER[%s]: %s\n", h->name().c_str(), h->value().c_str());
+    }
     if(len > 1){
       if(request->url() == "/config" || request->url() == "/config/"){
         /*Request to update the configuration. First check if the request is in JSON format (default)*/
-        Serial.print("First char: ");
-        Serial.println(data[0]);
         String jsonResponse;
         if(processConfigJson((const char*)data, jsonResponse, true)){
-          request->send(200, "application/json", jsonResponse);
+          request->send(204, "application/json", jsonResponse);
         }
         /*If not, check if it is a configuration string (e.g. form POST).*/
         else{
           String configResponse;
           String safeString = (const char*)data;
           safeString = safeString.substring(0, total);
+          Serial.println(safeString);
           processConfigString(safeString, configResponse, true);
-          if(configResponse != "") request->send(200, "application/json", configResponse);
+          if(configResponse != "") request->send(204, "application/json", configResponse);
           else request->send(404, "text/plain");
         }
         //request->send(200, "text/plain", "post");
-      }
-      else if(request->url() == "/ssid" || request->url() == "/ssid/"){
-        request->send(200, "application/json", ssidList);
       }
     }
     else request->send(404, "text/plain");
@@ -95,11 +96,17 @@ void WebRequestHandler::handleRequest(AsyncWebServerRequest *request){
         else request->send(404, "text/plain");
       }
     }
+    else if(request->url() == "/wifi" || request->url() == "/wifi/"){
+      request->send(200, "application/json", ssidList);
+    }
     else if(request->url() == "/svg"){
       request->send(200, "image/svg+xml", returnSvg());
     }
     else if(request->url() == "/cloud"){
       request->send(SPIFFS, "/cloud.html", "text/html");
+    }
+    else if(request->url() == "/test" || request->url() == "/test/"){
+      request->send_P(200, "text/html", test_html);
     }
     else{
       request->send(SPIFFS, "/index.html", "text/html");

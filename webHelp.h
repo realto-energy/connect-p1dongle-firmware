@@ -20,3 +20,52 @@ String returnSvg(){
   String svg = svgIcons[5][1];
   return svg;
 }
+
+const char test_html[] PROGMEM = R"rawliteral(
+<!DOCTYPE HTML><html>
+<head>
+  <title>ESP Web Server</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html {font-family: Arial; display: inline-block; text-align: center;}
+    h2 {font-size: 3.0rem;}
+    p {font-size: 3.0rem;}
+    body {max-width: 600px; margin:0px auto; padding-bottom: 25px;}
+  </style>
+<script>
+  function getJsonData() {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onload = function() {
+    if (this.status == 200) {
+      var jsonResponse = JSON.parse(this.responseText);
+      console.log(jsonResponse);
+      console.log(jsonResponse.SSIDlist);
+      console.log(jsonResponse[0]);
+      console.log(jsonResponse.SSIDlist[0]);
+      console.log(jsonResponse.SSIDlist.length);    
+      for (var i = 0; i < jsonResponse.SSIDlist.length; i++) {
+          var select = document.getElementById("WIFI_SSID");
+          var option = document.createElement("option");
+          option.text = jsonResponse.SSIDlist[i].SSID;
+          option.value = jsonResponse.SSIDlist[i].SSID;
+          select.add(option);
+      }
+    }
+  };
+  xhttp.open("GET", "wifi", true);
+  xhttp.send();
+}
+</script>
+</head>
+<body onload="getJsonData()">
+  <h2>ESP Web Server</h2>
+  <p><form method="post" action="config" enctype="text/plain" accept-charset="utf-8"></p>
+    <p><label for="cars">Choose a car:</label>
+    <select id="WIFI_SSID" name="_wifi_ssid">
+    </select></p>
+    <p><input name="_tempString" length=64 type="password" id="myPassword"></p>
+    <p><input type="submit" value="Submit"></p>
+  </form>
+</body>
+</html>
+)rawliteral";
