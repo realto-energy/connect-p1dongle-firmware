@@ -115,7 +115,7 @@ static const ulongStore configULong[] PROGMEM = {
 };
 
 static const stringStore configString[] PROGMEM = {
-  {"WiFi SSID", &_wifi_ssid, "WIFI_SSID", ""}, 
+  {"WiFi network", &_wifi_ssid, "WIFI_SSID", ""},
   {"MQTT hostname", &_mqtt_host, "MQTT_HOST", "10.42.0.1"},
   {"MQTT ID", &_mqtt_id, "MQTT_ID", ""},
   {"MQTT username", &_mqtt_user, "MQTT_USER", ""},

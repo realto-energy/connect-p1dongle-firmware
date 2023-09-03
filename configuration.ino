@@ -267,7 +267,7 @@ boolean storeConfigVar(String keyValue, int varType, int varNum){
 }
 
 
-boolean processConfigJson(String jsonString, String &response, bool updateConfig){
+boolean processConfigJson(String jsonString, String &configResponse, bool updateConfig){
   /*Process a JSON string containing configuration variables coming in through the HTTP API or MQTT, 
    * and prepare a JSON response reflecting the updated value of the configuration variables.
    * The JSON string should be formatted as {"NVS key name":value}. You can chain multiple configuration variables in one string.
@@ -336,16 +336,16 @@ boolean processConfigJson(String jsonString, String &response, bool updateConfig
         /*Build a JSON response containing the new value for every updated key, concatenate if there are multiple*/
         foundInConfig = returnConfigVar(keyValue.key().c_str(), retVarType, retVarNum, false);
         if(foundInConfig != ""){
-          response += foundInConfig.substring(1, foundInConfig.length()-1);
-          response += ",";
+          configResponse += foundInConfig.substring(1, foundInConfig.length()-1);
+          configResponse += ",";
         }
       }
     }
     /*Tidy up the concatenation. The response is passed by reference.*/
-    if(response != ""){
-      response = response.substring(0, response.length()-1);
-      response = "{" + response;
-      response += "}";
+    if(configResponse != ""){
+      configResponse = configResponse.substring(0, configResponse.length()-1);
+      configResponse = "{" + configResponse;
+      configResponse += "}";
     }
   }
   else Serial.println("nope");
@@ -355,22 +355,29 @@ boolean processConfigJson(String jsonString, String &response, bool updateConfig
 boolean processConfigString(String confString, String &response, bool updateConfig){
   /*Process a string containing configuration variables coming in through the HTTP API (or MQTT), 
    * and prepare a JSON response reflecting the updated value of the configuration variables.
-   * The string should be formatted as WIFI_STA=true&WIFI_SSID=test
+   * The string should be formatted as WIFI_STA=true\r\nWIFI_SSID=test
    * This function is mainly intended for HTTP forms returning input data over POST.
     */
   String foundInConfig;
   int prevsep, separator;
   while(separator > -1){
-    separator = confString.indexOf('&');
+    separator = confString.indexOf('\n');
     /*Extract individual key=value pairs*/
     String subString = confString.substring(0, separator);
+    subString = subString.substring(0, separator);
     if(subString != ""){
       /*Split each pair into its key name and key value*/
       int kvsep = subString.indexOf('=');
       String key = subString.substring(0, kvsep);
-      String keyValue = subString.substring(kvsep+1);
+      if(key == "WIFI_NW") key = "WIFI_SSID"; //temp fix for a bug in the ESPasyncWebserver library
+      String keyValue;
+      int sepr = subString.indexOf('\r');
+      if(sepr > 0){
+        keyValue = subString.substring(kvsep+1, sepr);
+      }
+      else keyValue = subString.substring(kvsep+1);
       int retVarType, retVarNum;
-      if(findInConfig(key, retVarType, retVarNum)){
+      if(findInConfig(key.c_str(), retVarType, retVarNum)){
         /*check if the key name exists in one of the data stores through findInConfig()*/
         if(updateConfig){
           storeConfigVar(keyValue.c_str(), retVarType, retVarNum);

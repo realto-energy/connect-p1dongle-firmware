@@ -2,6 +2,8 @@
 
 void externalIntegrationsBootstrap(){
   /*Put variables that need to be initted at boot here*/
+  _wifi_ssid = "Aether";
+  _wifi_password = "RaidillondelEauRouge0x03";
   _realto_en = true;
   _key_pushlist = 65534;//511;
   _mbus_pushlist = 136;

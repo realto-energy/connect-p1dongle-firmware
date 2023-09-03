@@ -140,6 +140,7 @@ void processMeterTelegram(String rawTelegram, String rawCRC){
         syslog("Syncing to to metertime", 0);
         localtime(&splitTimestamp);
         timeSet = true;
+        sinceClockCheck = 0;
       }
       sinceMeterCheck = 0; //The metertime key is used to check for the presence of the digital meter
       if(meterError){

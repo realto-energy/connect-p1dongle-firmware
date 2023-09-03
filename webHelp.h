@@ -37,14 +37,9 @@ const char test_html[] PROGMEM = R"rawliteral(
   var xhttp = new XMLHttpRequest();
   xhttp.onload = function() {
     if (this.status == 200) {
-      var jsonResponse = JSON.parse(this.responseText);
-      console.log(jsonResponse);
-      console.log(jsonResponse.SSIDlist);
-      console.log(jsonResponse[0]);
-      console.log(jsonResponse.SSIDlist[0]);
-      console.log(jsonResponse.SSIDlist.length);    
+      var jsonResponse = JSON.parse(this.responseText);  
       for (var i = 0; i < jsonResponse.SSIDlist.length; i++) {
-          var select = document.getElementById("WIFI_SSID");
+          var select = document.getElementById("WIFI");
           var option = document.createElement("option");
           option.text = jsonResponse.SSIDlist[i].SSID;
           option.value = jsonResponse.SSIDlist[i].SSID;
@@ -59,13 +54,61 @@ const char test_html[] PROGMEM = R"rawliteral(
 </head>
 <body onload="getJsonData()">
   <h2>ESP Web Server</h2>
-  <p><form method="post" action="config" enctype="text/plain" accept-charset="utf-8"></p>
-    <p><label for="cars">Choose a car:</label>
-    <select id="WIFI_SSID" name="_wifi_ssid">
+  <p><form method="post" action="config" name="myForm" enctype="text/plain" accept-charset="utf-8"></p>
+
+    <p>WiFi network:
+    <select id="WIFI" name="WIFI_SSID">
     </select></p>
-    <p><input name="_tempString" length=64 type="password" id="myPassword"></p>
+    <p>Password: <input name="WIFI_PASSWD" length=64 type="password" id="password"></p>
+    <p>E-mail: <input name="USER_EMAIL" length=64 type="email" id="email"></p>
     <p><input type="submit" value="Submit"></p>
   </form>
+  <script>
+  function handleFormSubmit(event) {
+    event.preventDefault();
+  
+    const data = new FormData(event.target);
+  
+    const value = Object.fromEntries(data.entries());
+   
+    console.log("Object:", value);
+    console.log("JSON String:", JSON.stringify(value));
+
+    fetch('http://192.168.1.9/config', {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(value)
+    })
+    .then(response => {
+        // Check if the response is okay
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        // Get the raw text of the response
+        return response.text();
+    })
+    .then(text => {
+        // Log the raw response text
+        console.log("Raw server response:", text);
+    
+        // Try to parse the text as JSON and return it
+        return text ? JSON.parse(text) : {};
+    })
+    .then(data => {
+        console.log("Parsed response:", data);
+    })
+    .catch(error => {
+        console.log('There was a problem with the fetch operation:', error.message);
+    });
+    
+  }
+  
+  const form = document.querySelector("form");
+  form.addEventListener("submit", handleFormSubmit);
+  </script>
 </body>
 </html>
 )rawliteral";

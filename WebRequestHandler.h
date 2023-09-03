@@ -17,6 +17,14 @@ public:
 
 bool WebRequestHandler::canHandle(AsyncWebServerRequest *request){
   /*Add custom headers here with request->addInterestingHeader("ANY");*/
+  /*Serial.println("Webrequest");
+  Serial.println(request->method());
+  int headers = request->headers();
+  int i;
+  for(i=0;i<headers;i++){
+    AsyncWebHeader* h = request->getHeader(i);
+    Serial.printf("HEADER[%s]: %s\n", h->name().c_str(), h->value().c_str());
+  }*/
   return true;
 }
 
@@ -25,27 +33,20 @@ void WebRequestHandler::handleBody(AsyncWebServerRequest *request, uint8_t *data
   if(request->method() == 2 || request->method() == 4){
     Serial.print("POST/PUT to ");
     Serial.println(request->url());
-    int headers = request->headers();
-    int i;
-    for(i=0;i<headers;i++){
-      AsyncWebHeader* h = request->getHeader(i);
-      Serial.printf("HEADER[%s]: %s\n", h->name().c_str(), h->value().c_str());
-    }
     if(len > 1){
       if(request->url() == "/config" || request->url() == "/config/"){
         /*Request to update the configuration. First check if the request is in JSON format (default)*/
         String jsonResponse;
         if(processConfigJson((const char*)data, jsonResponse, true)){
-          request->send(204, "application/json", jsonResponse);
+          request->send(200, "application/json", jsonResponse);
         }
         /*If not, check if it is a configuration string (e.g. form POST).*/
         else{
           String configResponse;
           String safeString = (const char*)data;
           safeString = safeString.substring(0, total);
-          Serial.println(safeString);
           processConfigString(safeString, configResponse, true);
-          if(configResponse != "") request->send(204, "application/json", configResponse);
+          if(configResponse != "") request->send(200, "application/json", configResponse);
           else request->send(404, "text/plain");
         }
         //request->send(200, "text/plain", "post");
