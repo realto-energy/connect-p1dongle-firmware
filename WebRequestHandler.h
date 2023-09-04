@@ -1,7 +1,7 @@
 /*The webserver client and its handlers live here*/
 #include "SPIFFS.h"
 extern bool findInConfig(String, int&, int&), processConfigJson(String, String&, bool), processConfigString(String, String&, bool), storeConfigVar(String, int, int);
-extern String returnConfigVar(String, int, int, bool), returnConfig(), returnSvg(), ssidList;
+extern String returnConfigVar(String, int, int, bool), returnConfig(), returnSvg(), ssidList, releaseChannels();
 extern const char test_html[];
 class WebRequestHandler : public AsyncWebHandler {
 public:
@@ -99,6 +99,9 @@ void WebRequestHandler::handleRequest(AsyncWebServerRequest *request){
     }
     else if(request->url() == "/wifi" || request->url() == "/wifi/"){
       request->send(200, "application/json", ssidList);
+    }
+    else if(request->url() == "/releasechan" || request->url() == "/releasechan/"){
+      request->send(200, "application/json", releaseChannels());
     }
     else if(request->url() == "/svg"){
       request->send(200, "image/svg+xml", returnSvg());

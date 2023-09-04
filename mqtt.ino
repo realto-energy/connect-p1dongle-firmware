@@ -142,6 +142,7 @@ void connectMqtt() {
         if(_mqtt_tls){
           mqttclientSecure.publish(availabilityTopic.c_str(), "online", true);
           mqttclientSecure.subscribe("set/devices/utility_meter/reboot");
+          mqttclientSecure.subscribe("set/devices/utility_meter/config");
         }
         else{
           mqttclient.publish(availabilityTopic.c_str(), "online", true);
@@ -223,5 +224,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
         setReboot();
       }
     }
+  }
+  if (String(topic) == "set/devices/utility_meter/config") {
+    String configResponse;
+    processConfigJson(messageTemp, configResponse, false);
+    
   }
 }

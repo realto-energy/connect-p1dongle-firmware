@@ -21,94 +21,274 @@ String returnSvg(){
   return svg;
 }
 
-const char test_html[] PROGMEM = R"rawliteral(
-<!DOCTYPE HTML><html>
-<head>
-  <title>ESP Web Server</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    html {font-family: Arial; display: inline-block; text-align: center;}
-    h2 {font-size: 3.0rem;}
-    p {font-size: 3.0rem;}
-    body {max-width: 600px; margin:0px auto; padding-bottom: 25px;}
-  </style>
-<script>
-  function getJsonData() {
-  var xhttp = new XMLHttpRequest();
-  xhttp.onload = function() {
-    if (this.status == 200) {
-      var jsonResponse = JSON.parse(this.responseText);  
-      for (var i = 0; i < jsonResponse.SSIDlist.length; i++) {
-          var select = document.getElementById("WIFI");
-          var option = document.createElement("option");
-          option.text = jsonResponse.SSIDlist[i].SSID;
-          option.value = jsonResponse.SSIDlist[i].SSID;
-          select.add(option);
-      }
-    }
-  };
-  xhttp.open("GET", "wifi", true);
-  xhttp.send();
+String releaseChannels(){
+  String channels = "{\"Releasechannels\":[{\"channel\":\"main\"},{\"channel\":\"develop\"},{\"channel\":\"alpha\"}]}"; //replace with Jsondoc
+  return channels;
 }
-</script>
-</head>
-<body onload="getJsonData()">
-  <h2>ESP Web Server</h2>
-  <p><form method="post" action="config" name="myForm" enctype="text/plain" accept-charset="utf-8"></p>
 
-    <p>WiFi network:
-    <select id="WIFI" name="WIFI_SSID">
-    </select></p>
-    <p>Password: <input name="WIFI_PASSWD" length=64 type="password" id="password"></p>
-    <p>E-mail: <input name="USER_EMAIL" length=64 type="email" id="email"></p>
-    <p><input type="submit" value="Submit"></p>
-  </form>
-  <script>
-  function handleFormSubmit(event) {
-    event.preventDefault();
-  
-    const data = new FormData(event.target);
-  
-    const value = Object.fromEntries(data.entries());
-   
-    console.log("Object:", value);
-    console.log("JSON String:", JSON.stringify(value));
-
-    fetch('http://192.168.1.9/config', {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(value)
-    })
-    .then(response => {
-        // Check if the response is okay
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+const char test_html[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <title>Digital meter - Main Menu</title>
+    <style>
+        body {
+            font-family: Helvetica, verdana, sans-serif;
+            background: #252525;
+            color: #eaeaea;
+            text-align: center;
         }
-        // Get the raw text of the response
-        return response.text();
-    })
-    .then(text => {
-        // Log the raw response text
-        console.log("Raw server response:", text);
+
+        h2 {
+            color: #0F3376;
+            padding: 2vh;
+        }
+
+        .collapsible {
+            background-color: #1fa3ec;
+            color: white;
+            cursor: pointer;
+            padding: 10px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+            transition: background-color 0.4s;
+        }
+
+        .collapsible:hover {
+            background-color: #0e70a4;
+        }
+
+        .collapsible:after {
+            content: ' +';
+            font-weight: bold;
+            float: right;
+        }
+
+        .active:after {
+            content: " -";
+        }
+
+        .show-password {
+            cursor: pointer;
+            color: #1fa3ec;
+            text-decoration: underline;
+        }
+
+        .content {
+            padding: 0 18px;
+            display: none;
+            overflow: hidden;
+            background-color: #4f4f4f;
+        }
+
+        a {
+            color: #1fa3ec;
+            text-decoration: none;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
     
-        // Try to parse the text as JSON and return it
-        return text ? JSON.parse(text) : {};
-    })
-    .then(data => {
-        console.log("Parsed response:", data);
-    })
-    .catch(error => {
-        console.log('There was a problem with the fetch operation:', error.message);
-    });
-    
-  }
-  
-  const form = document.querySelector("form");
-  form.addEventListener("submit", handleFormSubmit);
-  </script>
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+
+        label {
+            color: #1fa3ec;
+            font-weight: bold;
+            font-size: 0.9em;
+            display: block;
+            margin-top: 3px;
+            margin-bottom: 1px;
+            text-align: left;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+
+        button.submit {
+            margin-top: 20px;
+        }
+
+        .submit {
+            width: 600px;
+            background-color: #47c266; /* Green background */
+            color: white;
+            padding: 10px 20px;
+            margin: 20px 0; /* Separation from other content */
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .submit:hover {
+            background-color: #5aaf6f; /* Darker green on hover */
+        }
+        footer {
+            text-align: right;
+        }
+    </style>
+    <script>
+      function getJsonData() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onload = function() {
+        if (this.status == 200) {
+          var jsonResponse = JSON.parse(this.responseText);  
+          for (var i = 0; i < jsonResponse.SSIDlist.length; i++) {
+              var select = document.getElementById("WIFI");
+              var option = document.createElement("option");
+              option.text = jsonResponse.SSIDlist[i].SSID;
+              option.value = jsonResponse.SSIDlist[i].SSID;
+              select.add(option);
+            }
+          }
+        };
+        xhttp.open("GET", "wifi", true);
+        xhttp.send();
+      var xchan = new XMLHttpRequest();
+      xchan.onload = function() {
+        if (this.status == 200) {
+          var jsonResponse = JSON.parse(this.responseText);  
+          for (var i = 0; i < jsonResponse.Releasechannels.length; i++) {
+              var select = document.getElementById("release_channel");
+              var option = document.createElement("option");
+              option.text = jsonResponse.Releasechannels[i].channel;
+              option.value = jsonResponse.Releasechannels[i].channel;
+              select.add(option);
+            }
+          }
+        };
+        xchan.open("GET", "releasechan", true);
+        xchan.send();
+      }
+    </script>
+</head>
+
+<body onload="getJsonData()">
+    <div class="container">
+        <noscript>To use the digital meter dongle, please enable JavaScript<br></noscript>
+        <h2>Digital meter dongle</h2>
+        <h3 id="HostValue">STATE</h3>
+        <form id="configForm" method="post" action="config" name="myForm" enctype="text/plain" accept-charset="utf-8">
+            <button type="button" class="collapsible active">Basic settings</button>
+            <div class="content" style="display: block;">
+                <label for="WIFI">WiFi network</label>
+                <select id="WIFI" type="text" name="WIFI_SSID">
+                </select></p>
+                <label for="password">WiFi password</label>
+                <input type="password" id="password" name="WIFI_PASSWD" placeholder="Enter WiFi password">
+                <a class="show-password">show password</a>
+                <label for="cloudConfig">E-mail address</label>
+                <input type="text" name="USER_EMAIL" placeholder="Enter your email">
+            </div>
+            <button type="button" class="collapsible">Advanced settings</button>
+            <div class="content">
+                <label for="release_channel">Release channel</label>
+                <select id="release_channel" name="release_channel">
+                </select></p>
+            </div>
+            <button type="submit" class="submit">Submit</button>
+        </form>
+
+        <footer>
+            <hr>
+            <a href='https://realto.io' target='_blank'>Digital meter dongle by re.alto & plan-d.io</a>
+        </footer>
+    </div>
+
+    <script>
+        var coll = document.getElementsByClassName("collapsible");
+        for (var i = 0; i < coll.length; i++) {
+            coll[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var content = this.nextElementSibling;
+                if (content.style.display === "block") {
+                    content.style.display = "none";
+                } else {
+                    content.style.display = "block";
+                }
+            });
+        }
+        var passwordField = document.getElementById("password");
+        var showPasswordLink = document.querySelector(".show-password");
+
+        showPasswordLink.addEventListener("mouseover", function() {
+            passwordField.type = "text";
+        });
+
+        showPasswordLink.addEventListener("mouseout", function() {
+            passwordField.type = "password";
+        });
+        
+      function handleFormSubmit(event) {
+        event.preventDefault();
+      
+        const data = new FormData(event.target);
+      
+        const value = Object.fromEntries(data.entries());
+       
+        console.log("Object:", value);
+        console.log("JSON String:", JSON.stringify(value));
+
+        fetch('http://192.168.1.9/config', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(value)
+        })
+        .then(response => {
+            // Check if the response is okay
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            // Get the raw text of the response
+            return response.text();
+        })
+        .then(text => {
+            // Log the raw response text
+            console.log("Raw server response:", text);
+        
+            // Try to parse the text as JSON and return it
+            return text ? JSON.parse(text) : {};
+        })
+        .then(data => {
+            console.log("Parsed response:", data);
+        })
+        .catch(error => {
+            console.log('There was a problem with the fetch operation:', error.message);
+        });
+        
+      }
+      
+      const form = document.querySelector("form");
+      form.addEventListener("submit", handleFormSubmit);
+    </script>
 </body>
+
 </html>
+
 )rawliteral";
