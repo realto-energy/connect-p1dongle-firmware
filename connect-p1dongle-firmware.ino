@@ -21,6 +21,9 @@
 #include <elapsedMillis.h>
 #include "ledControl.h"
 
+#include "./src/syslog/Statistic.h"
+
+
 unsigned int fw_ver = 107;
 unsigned int onlineVersion, fw_new;
 DNSServer dnsServer;
@@ -35,6 +38,11 @@ bool clientSecureBusy, mqttPaused;
 
 #define HWSERIAL Serial1 //Use hardware UART for communication with digital meter
 #define TRIGGER 25 //Pin to trigger meter telegram request
+
+struct SyslogEntry {
+  std::string msg;
+  unsigned long timestamp;
+};
 
 //Data structure for pulse counters
 struct pulse {
@@ -96,7 +104,7 @@ time_t dm_timestamp; // dm timestamp
 struct tm mb1_time;  // mbus1 time elements structure
 time_t mb1_timestamp; // mbus1 timestamp
 int prevDay = -1;
-
+ 
 //General housekeeping vars
 unsigned int counter, bootcount, refbootcount, reconncount, remotehostcount, wificheckcount;
 String resetReason, last_reset, last_reset_verbose;
@@ -122,6 +130,9 @@ boolean update_autoCheck, update_auto, updateAvailable, update_start, update_fin
 unsigned int mqtt_port;
 unsigned long upload_throttle;
 String eid_webhook;
+unsigned int mqttPushCount, mqttPushFails;
+
+Xenn::Statistic rssiStatistic;
 
 void setup(){
   M5.begin(true, false, true);
@@ -164,7 +175,6 @@ void setup(){
   }
   delay(100);
   initWifi();
-  scanWifi();
   server.begin();
 }
 
@@ -177,6 +187,9 @@ void loop(){
     mqttclient.loop();
   }
   if(wifiScan) scanWifi();
+
+  gatherStatistics();
+
   if(sinceRebootCheck > 2000){
     if(rebootInit){
       //if(!clientSecureBusy){
@@ -235,6 +248,13 @@ void loop(){
     if(mqtt_en){
       if(sinceLastUpload >= upload_throttle * 1000){
         //Serial.println(jsonOutputReadings);
+        String mqtt_topic = "plan-d/" + String(apSSID);
+        if(mqtt_tls){
+          mqttclientSecure.publish(mqtt_topic.c_str(), "online", true);
+        }
+        else{
+          mqttclient.publish(mqtt_topic.c_str(), "online", true);
+        }
         pubMqtt("plan-d/" + String(apSSID) + "/data/readings", jsonOutputReadings, false);
         sinceLastUpload = 0;
       }
