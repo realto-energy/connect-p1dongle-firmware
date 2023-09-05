@@ -298,8 +298,8 @@ void WebRequestHandler::handleRequest(AsyncWebServerRequest *request)
       if(p->value() == "true") v2_fleet = true;
       else v2_fleet = false;
     }
-    else dev_fleet = false;
-    if(dev_fleet && alpha_fleet || v2_fleet){ //make sure you cant subscribe to two channels
+    else v2_fleet = false;
+    if(dev_fleet && alpha_fleet){ //make sure you cant subscribe to two channels
       dev_fleet = false;
       alpha_fleet = true;
     }

@@ -86,6 +86,7 @@ String getUnit() {
   unitData["innerChecks"]["update_autoCheck"]["value"] = update_autoCheck;
   unitData["innerChecks"]["alpha_fleet"]["value"] = alpha_fleet;
   unitData["innerChecks"]["beta_fleet"]["value"] = dev_fleet;
+  unitData["innerChecks"]["v2_fleet"]["value"] = v2_fleet;
   String output;
   serializeJson(unitData, output);
   return output;
