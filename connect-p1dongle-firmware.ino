@@ -24,7 +24,7 @@
 #include "./src/syslog/Statistic.h"
 
 
-unsigned int fw_ver = 107;
+unsigned int fw_ver = 109;
 unsigned int onlineVersion, fw_new;
 DNSServer dnsServer;
 AsyncWebServer server(80);
@@ -116,7 +116,7 @@ byte mac[6];
 boolean wifiSTA = false;
 boolean rebootReq = false;
 boolean rebootInit = false;
-boolean wifiError, mqttHostError, mqttClientError, mqttWasConnected, httpsError, meterError, eidError, wifiSave, wifiScan, eidSave, mqttSave, haSave, debugInfo, timeconfigured, firstDebugPush, alpha_fleet, dev_fleet;
+boolean wifiError, mqttHostError, mqttClientError, mqttWasConnected, httpsError, meterError, eidError, wifiSave, wifiScan, eidSave, mqttSave, haSave, debugInfo, timeconfigured, firstDebugPush, alpha_fleet, dev_fleet, v2_fleet;
 String dmPowIn, dmPowCon, dmTotCont1, dmTotCont2, dmTotInt1, dmTotInt2, dmActiveTariff, dmVoltagel1, dmVoltagel2, dmVoltagel3, dmCurrentl1, dmCurrentl2, dmCurrentl3, dmGas, dmText, dmAvDem, dmMaxDemM;
 String meterConfig[17];
 int dsmrVersion, trigger_type, trigger_interval;
