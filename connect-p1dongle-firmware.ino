@@ -98,7 +98,7 @@ elapsedMillis sinceConnCheck, sinceUpdateCheck, sinceClockCheck, sinceLastUpload
 //General housekeeping vars
 unsigned int reconncount, remotehostcount, telegramCount;
 int wifiRSSI;
-String resetReason;
+String resetReason, infoMsg;
 float freeHeap, minFreeHeap, maxAllocHeap;
 String ssidList;
 char apSSID[] = "P1000000";

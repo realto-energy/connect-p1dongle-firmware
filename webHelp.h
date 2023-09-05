@@ -22,11 +22,16 @@ String returnSvg(){
 }
 
 String releaseChannels(){
-  String channels = "{\"Releasechannels\":[{\"channel\":\"main\"},{\"channel\":\"develop\"},{\"channel\":\"alpha\"}]}"; //replace with Jsondoc
+  /*Replace with a dynamic Jsondoc*/
+  String channels;
+  if(_alpha_fleet) channels = "{\"Releasechannels\":[{\"channel\":\"alpha\"},{\"channel\":\"develop\"},{\"channel\":\"main\"}]}"; 
+  else if(_dev_fleet) channels = "{\"Releasechannels\":[{\"channel\":\"develop\"},{\"channel\":\"alpha\"},{\"channel\":\"main\"}]}";
+  else channels = "{\"Releasechannels\":[{\"channel\":\"main\"},{\"channel\":\"develop\"},{\"channel\":\"alpha\"}]}";
   return channels;
 }
 
-const char test_html[] PROGMEM = R"rawliteral(
+/*Everything between rawliteral( ) is treated as one big string*/
+const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -151,7 +156,21 @@ const char test_html[] PROGMEM = R"rawliteral(
         }
     </style>
     <script>
-      function getJsonData() {
+      setInterval(function() {
+        getInfoMessage();
+      }, 500);
+      function getInfoMessage() { //check if info messages need to be displayed on top (e.g. "reboot required");
+        var xhttp = new XMLHttpRequest();
+        xhttp.onload = function() {
+          if (this.status == 200) {
+            document.getElementById("InfoMessage").innerHTML =
+            this.responseText;
+          }
+        };
+        xhttp.open("GET", "info", true);
+        xhttp.send();
+      };
+      function getJsonData() { //perform a request to /wifi to get the list of detected APs, make those available as select options in the form
       var xhttp = new XMLHttpRequest();
       xhttp.onload = function() {
         if (this.status == 200) {
@@ -167,7 +186,7 @@ const char test_html[] PROGMEM = R"rawliteral(
         };
         xhttp.open("GET", "wifi", true);
         xhttp.send();
-      var xchan = new XMLHttpRequest();
+      var xchan = new XMLHttpRequest(); //do the same with the available release channels
       xchan.onload = function() {
         if (this.status == 200) {
           var jsonResponse = JSON.parse(this.responseText);  
@@ -182,7 +201,17 @@ const char test_html[] PROGMEM = R"rawliteral(
         };
         xchan.open("GET", "releasechan", true);
         xchan.send();
-      }
+      var hhttp = new XMLHttpRequest();
+      hhttp.onload = function() { //get the hostname of the dongle
+        if (this.status == 200) {
+          document.getElementById("HostName").innerHTML =
+          this.responseText;
+        }
+      };
+      hhttp.open("GET", "hostname", true);
+      hhttp.send();
+        
+    };
     </script>
 </head>
 
@@ -190,7 +219,8 @@ const char test_html[] PROGMEM = R"rawliteral(
     <div class="container">
         <noscript>To use the digital meter dongle, please enable JavaScript<br></noscript>
         <h2>Digital meter dongle</h2>
-        <h3 id="HostValue">STATE</h3>
+        <h3><span id="HostName">STATE</h3>
+        <h3><span id="InfoMessage" style='text-align:center;color:red;' ></span></h3>
         <form id="configForm" method="post" action="config" name="myForm" enctype="text/plain" accept-charset="utf-8">
             <button type="button" class="collapsible active">Basic settings</button>
             <div class="content" style="display: block;">
@@ -219,7 +249,7 @@ const char test_html[] PROGMEM = R"rawliteral(
     </div>
 
     <script>
-        var coll = document.getElementsByClassName("collapsible");
+        var coll = document.getElementsByClassName("collapsible"); //animate the collapsibles
         for (var i = 0; i < coll.length; i++) {
             coll[i].addEventListener("click", function() {
                 this.classList.toggle("active");
@@ -231,18 +261,17 @@ const char test_html[] PROGMEM = R"rawliteral(
                 }
             });
         }
-        var passwordField = document.getElementById("password");
+        
+        var passwordField = document.getElementById("password"); //blank password
         var showPasswordLink = document.querySelector(".show-password");
-
         showPasswordLink.addEventListener("mouseover", function() {
             passwordField.type = "text";
         });
-
         showPasswordLink.addEventListener("mouseout", function() {
             passwordField.type = "password";
         });
         
-      function handleFormSubmit(event) {
+      function handleFormSubmit(event) { //transform the HTML form input to a JSON string to be sent to the dongle
         event.preventDefault();
       
         const data = new FormData(event.target);
@@ -252,7 +281,7 @@ const char test_html[] PROGMEM = R"rawliteral(
         console.log("Object:", value);
         console.log("JSON String:", JSON.stringify(value));
 
-        fetch('http://192.168.1.9/config', {
+        fetch('/config', {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -283,7 +312,6 @@ const char test_html[] PROGMEM = R"rawliteral(
         });
         
       }
-      
       const form = document.querySelector("form");
       form.addEventListener("submit", handleFormSubmit);
     </script>

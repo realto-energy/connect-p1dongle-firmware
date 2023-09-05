@@ -332,6 +332,7 @@ boolean processConfigJson(String jsonString, String &configResponse, bool update
             }
           }
           saveConfig();
+          infoMsg = "Please reboot the dongle to have changes take effect";
         }
         /*Build a JSON response containing the new value for every updated key, concatenate if there are multiple*/
         foundInConfig = returnConfigVar(keyValue.key().c_str(), retVarType, retVarNum, false);

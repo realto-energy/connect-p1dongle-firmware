@@ -1,8 +1,9 @@
 /*The webserver client and its handlers live here*/
 #include "SPIFFS.h"
 extern bool findInConfig(String, int&, int&), processConfigJson(String, String&, bool), processConfigString(String, String&, bool), storeConfigVar(String, int, int);
-extern String returnConfigVar(String, int, int, bool), returnConfig(), returnSvg(), ssidList, releaseChannels();
-extern const char test_html[];
+extern String returnConfigVar(String, int, int, bool), returnConfig(), returnSvg(), ssidList, releaseChannels(), infoMsg;
+extern const char index_html[];
+extern char apSSID[];
 class WebRequestHandler : public AsyncWebHandler {
 public:
   WebRequestHandler() {}
@@ -106,14 +107,17 @@ void WebRequestHandler::handleRequest(AsyncWebServerRequest *request){
     else if(request->url() == "/svg"){
       request->send(200, "image/svg+xml", returnSvg());
     }
-    else if(request->url() == "/cloud"){
-      request->send(SPIFFS, "/cloud.html", "text/html");
+    else if(request->url() == "/info"){
+      request->send(200, "text/plain", infoMsg);
     }
-    else if(request->url() == "/test" || request->url() == "/test/"){
-      request->send_P(200, "text/html", test_html);
+    else if(request->url() == "/hostname"){
+      request->send(200, "text/plain", apSSID);
+    }
+    else if(request->url() == "/test" || request->url() == "/test/"){ //temp, just for SPIFFS testing
+      request->send_P(200, "text/html", index_html);
     }
     else{
-      request->send(SPIFFS, "/index.html", "text/html");
+      request->send_P(200, "text/html", index_html);
     }
   }
 }
