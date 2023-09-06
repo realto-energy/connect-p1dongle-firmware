@@ -4,16 +4,17 @@ boolean checkUpdate(){
     bool needUpdate = false;
     if(mqttclientSecure.connected()){
       syslog("Disconnecting TLS MQTT connection to perform firmware version check", 0);
-      String mqtt_topic = "data/devices/utility_meter";
+      String mqtt_topic = "plan-d/" + String(apSSID);
       mqttclientSecure.publish(mqtt_topic.c_str(), "offline", true);
       mqttclientSecure.disconnect();
       mqttPaused = true;
     }
     if(bundleLoaded){
       syslog("Checking repository for firmware update... ", 0);
-      String checkUrl = "https://raw.githubusercontent.com/plan-d-io/P1-dongle/";
+      String checkUrl = "https://raw.githubusercontent.com/realto-energy/connect-p1dongle-firmware/";
       if(_dev_fleet) checkUrl += "develop/version";
       else if(_alpha_fleet) checkUrl += "alpha/version";
+      else if(_v2_fleet) checkUrl += "V2-0/version";
       else checkUrl += "main/version";
       syslog("Connecting to " + checkUrl, 0);
       if (https.begin(*client, checkUrl)) {  
@@ -65,9 +66,10 @@ boolean startUpdate(){
         mqttPaused = true;
       }
       if(bundleLoaded){
-        String baseUrl = "https://raw.githubusercontent.com/plan-d-io/P1-dongle/";
+        String baseUrl ="https://raw.githubusercontent.com/realto-energy/connect-p1dongle-firmware/";
         if(_dev_fleet) baseUrl += "develop/bin/P1-dongle";
         else if(_alpha_fleet) baseUrl += "alpha/bin/P1-dongle";
+        else if(_v2_fleet) baseUrl += "V2-0/bin/connect-p1dongle-firmware";
         else baseUrl += "main/bin/P1-dongle";
         String fileUrl = baseUrl + ".ino.bin"; //leaving this split up for now if we later want to do versioning in the filename
         syslog("Getting new firmware over HTTPS/TLS", 0);
@@ -170,146 +172,152 @@ boolean startUpdate(){
 }
 
 boolean finishUpdate(bool restore){
-  clientSecureBusy = true;
-  mqttPaused;
-  boolean filesUpdated = false;
-  if(mqttclientSecure.connected()){
-    syslog("Disconnecting TLS MQTT connection to fetch update", 2);
-    mqttclientSecure.disconnect();
-    mqttPaused = true;
-  }
-  if(bundleLoaded){
-    syslog("Finishing upgrade. Preparing to download static files.", 1);
-    String baseUrl = "https://raw.githubusercontent.com/plan-d-io/P1-dongle/";
-    if(_dev_fleet) baseUrl += "develop";
-    else if(_alpha_fleet) baseUrl += "alpha";
-    else baseUrl += "main";
-    String fileUrl = baseUrl + "/bin/";
-    if(restore) fileUrl += "restore";
-    else fileUrl += "files";
-    String payload;
-    if (https.begin(*client, fileUrl)) {
-      int httpCode = https.GET();
-      if (httpCode > 0) {
-        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-          payload = https.getString();
+  if(!_v2_fleet){
+    clientSecureBusy = true;
+    mqttPaused;
+    boolean filesUpdated = false;
+    if(mqttclientSecure.connected()){
+      syslog("Disconnecting TLS MQTT connection to fetch update", 2);
+      mqttclientSecure.disconnect();
+      mqttPaused = true;
+    }
+    if(bundleLoaded){
+      syslog("Finishing upgrade. Preparing to download static files.", 1);
+      String baseUrl = "https://raw.githubusercontent.com/realto-energy/connect-p1dongle-firmware/";
+      if(_dev_fleet) baseUrl += "develop";
+      else if(_alpha_fleet) baseUrl += "alpha";
+      else baseUrl += "main";
+      String fileUrl = baseUrl + "/bin/";
+      if(restore) fileUrl += "restore";
+      else fileUrl += "files";
+      String payload;
+      if (https.begin(*client, fileUrl)) {
+        int httpCode = https.GET();
+        if (httpCode > 0) {
+          if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+            payload = https.getString();
+          }
+        } 
+        else {
+          syslog("Could not connect to repository, HTTPS code " + String(https.errorToString(httpCode)), 2);
         }
-      } 
-      else {
-        syslog("Could not connect to repository, HTTPS code " + String(https.errorToString(httpCode)), 2);
-      }
-      https.end();
-      unsigned long eof = payload.lastIndexOf('\n');
-      if(eof > 0){
-        syslog("Downloading static files", 2);
-        unitState = -1;
-        blinkLed();
-        unsigned long delimStart = 0;
-        unsigned long delimEnd = 0;
-        while(delimEnd < eof){
-          delimEnd = payload.indexOf('\n', delimStart);
-          String s = "/";
-          String temp = payload.substring(delimStart, delimEnd);
-          if(restore) s += payload.substring(delimStart, delimEnd-1);
-          else s += payload.substring(delimStart, delimEnd-1);
-          delimStart = delimEnd+1;
-          fileUrl = baseUrl + "/data" + s;
-          Serial.println(fileUrl);
-          if (s) {
-            if (https.begin(*client, fileUrl)) {
-              int httpCode = https.GET();
-              if (httpCode > 0) {
-                if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-                  SPIFFS.remove(s);
-                  File f = SPIFFS.open(s, FILE_WRITE);
-                  long contentLength = https.getSize();
-                  Serial.print("File size: ");
-                  Serial.println(contentLength);
-                  Serial.println("Begin download");
-                  size_t written = https.writeToStream(&f);
-                  if (written == contentLength) {
-                    Serial.println("Written : " + String(written) + " successfully");
-                    filesUpdated = true;
+        https.end();
+        unsigned long eof = payload.lastIndexOf('\n');
+        if(eof > 0){
+          syslog("Downloading static files", 2);
+          unitState = -1;
+          blinkLed();
+          unsigned long delimStart = 0;
+          unsigned long delimEnd = 0;
+          while(delimEnd < eof){
+            delimEnd = payload.indexOf('\n', delimStart);
+            String s = "/";
+            String temp = payload.substring(delimStart, delimEnd);
+            if(restore) s += payload.substring(delimStart, delimEnd-1);
+            else s += payload.substring(delimStart, delimEnd-1);
+            delimStart = delimEnd+1;
+            fileUrl = baseUrl + "/data" + s;
+            Serial.println(fileUrl);
+            if (s) {
+              if (https.begin(*client, fileUrl)) {
+                int httpCode = https.GET();
+                if (httpCode > 0) {
+                  if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+                    SPIFFS.remove(s);
+                    File f = SPIFFS.open(s, FILE_WRITE);
+                    long contentLength = https.getSize();
+                    Serial.print("File size: ");
+                    Serial.println(contentLength);
+                    Serial.println("Begin download");
+                    size_t written = https.writeToStream(&f);
+                    if (written == contentLength) {
+                      Serial.println("Written : " + String(written) + " successfully");
+                      filesUpdated = true;
+                    }
+                    f.close();
                   }
-                  f.close();
-                }
-                else{
-                  syslog("Could not fetch file, HTTPS code " + String(httpCode), 2);
-                  if(httpCode == 400 || httpCode == 404){ //temp fix till we can figure out the issue with non-deterministic behaviour of line-endings (github encoding?)
-                    Serial.println("retrying");
-                    https.end();
-                    s = "/";
-                    s += temp;
-                    delimStart = delimEnd+1;
-                    fileUrl = baseUrl + "/data" + s;
-                    Serial.println(fileUrl);
-                    if (s) {
-                      if (https.begin(*client, fileUrl)) {
-                        httpCode = https.GET();
-                        Serial.println(httpCode);
-                        if (httpCode > 0) {
-                          if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-                            SPIFFS.remove(s);
-                            File f = SPIFFS.open(s, FILE_WRITE);
-                            long contentLength = https.getSize();
-                            Serial.print("File size: ");
-                            Serial.println(contentLength);
-                            Serial.println("Begin download");
-                            size_t written = https.writeToStream(&f);
-                            if (written == contentLength) {
-                              Serial.println("Written : " + String(written) + " successfully");
-                              filesUpdated = true;
+                  else{
+                    syslog("Could not fetch file, HTTPS code " + String(httpCode), 2);
+                    if(httpCode == 400 || httpCode == 404){ //temp fix till we can figure out the issue with non-deterministic behaviour of line-endings (github encoding?)
+                      Serial.println("retrying");
+                      https.end();
+                      s = "/";
+                      s += temp;
+                      delimStart = delimEnd+1;
+                      fileUrl = baseUrl + "/data" + s;
+                      Serial.println(fileUrl);
+                      if (s) {
+                        if (https.begin(*client, fileUrl)) {
+                          httpCode = https.GET();
+                          Serial.println(httpCode);
+                          if (httpCode > 0) {
+                            if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+                              SPIFFS.remove(s);
+                              File f = SPIFFS.open(s, FILE_WRITE);
+                              long contentLength = https.getSize();
+                              Serial.print("File size: ");
+                              Serial.println(contentLength);
+                              Serial.println("Begin download");
+                              size_t written = https.writeToStream(&f);
+                              if (written == contentLength) {
+                                Serial.println("Written : " + String(written) + " successfully");
+                                filesUpdated = true;
+                              }
+                              f.close();
                             }
-                            f.close();
                           }
                         }
+                        else{
+                          Serial.println("could not start client");
+                        }
                       }
-                      else{
-                        Serial.println("could not start client");
-                      }
+                      else {
+                        Serial.print("No s: ");
+                        Serial.println(s);
+                      }                    
                     }
-                    else {
-                      Serial.print("No s: ");
-                      Serial.println(s);
-                    }                    
                   }
+                } 
+                else {
+                  syslog("Could not connect to repository, HTTPS code " + String(https.errorToString(httpCode)), 2);
                 }
-              } 
-              else {
-                syslog("Could not connect to repository, HTTPS code " + String(https.errorToString(httpCode)), 2);
+                https.end();
               }
-              https.end();
+              else {
+                syslog("Could not establish connection", 2);
+              }
             }
-            else {
-              syslog("Could not establish connection", 2);
+            else{
+              syslog("Could not write files!", 3);
             }
           }
-          else{
-            syslog("Could not write files!", 3);
-          }
-        }
-      }   
-    } 
-    else {
-      syslog("Unable to connect to repository", 2);
+        }   
+      } 
+      else {
+        syslog("Unable to connect to repository", 2);
+      }
+    }
+    client->stop();
+    clientSecureBusy = false;
+    _update_finish = false;
+    if(filesUpdated){
+      _update_finish = false;
+      if(_restore_finish) _restore_finish = false;
+      syslog("Static files successfully updated. Rebooting to finish update.", 1);
+      saveResetReason("Static files successfully updated. Rebooting to finish update.");
+      saveConfig();
+      SPIFFS.end();
+      delay(500);
+      ESP.restart();
+    }
+    if(mqttPaused){
+      mqttPaused = false;
+      sinceConnCheck = 10000;
     }
   }
-  client->stop();
-  clientSecureBusy = false;
-  _update_finish = false;
-  if(filesUpdated){
+  else{
+    clientSecureBusy = false;
     _update_finish = false;
-    if(_restore_finish) _restore_finish = false;
-    syslog("Static files successfully updated. Rebooting to finish update.", 1);
-    saveResetReason("Static files successfully updated. Rebooting to finish update.");
-    saveConfig();
-    SPIFFS.end();
-    delay(500);
-    ESP.restart();
-  }
-  if(mqttPaused){
-    mqttPaused = false;
-    sinceConnCheck = 10000;
   }
   saveConfig();
   //if(unitState < 6) unitState = 5; //what?

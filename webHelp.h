@@ -24,9 +24,10 @@ String returnSvg(){
 String releaseChannels(){
   /*Replace with a dynamic Jsondoc*/
   String channels;
-  if(_alpha_fleet) channels = "{\"Releasechannels\":[{\"channel\":\"alpha\"},{\"channel\":\"develop\"},{\"channel\":\"main\"}]}"; 
-  else if(_dev_fleet) channels = "{\"Releasechannels\":[{\"channel\":\"develop\"},{\"channel\":\"alpha\"},{\"channel\":\"main\"}]}";
-  else channels = "{\"Releasechannels\":[{\"channel\":\"main\"},{\"channel\":\"develop\"},{\"channel\":\"alpha\"}]}";
+  if(_alpha_fleet) channels = "{\"Releasechannels\":[{\"channel\":\"alpha\"},{\"channel\":\"develop\"},{\"channel\":\"main\"},{\"channel\":\"V2\"}]}"; 
+  else if(_dev_fleet) channels = "{\"Releasechannels\":[{\"channel\":\"develop\"},{\"channel\":\"alpha\"},{\"channel\":\"main\"},{\"channel\":\"V2\"}]}";
+  else if(_v2_fleet) channels = "{\"Releasechannels\":[{\"channel\":\"V2\"},{\"channel\":\"develop\"},{\"channel\":\"alpha\"},{\"channel\":\"main\"}]}";
+  else channels = "{\"Releasechannels\":[{\"channel\":\"main\"},{\"channel\":\"develop\"},{\"channel\":\"alpha\"},{\"channel\":\"V2\"}]}";
   return channels;
 }
 

@@ -100,7 +100,7 @@ void connectMqtt() {
         syslog("Trying to connect to secure MQTT broker", 0);
         while(!mqttclientSecure.connected() && mqttretry < 2){
           Serial.print("...");
-          String mqtt_topic = "data/devices/utility_meter";
+          String mqtt_topic = "plan-d/" + String(apSSID);
           if (_mqtt_auth) mqttclientSecure.connect(_mqtt_id.c_str(), _mqtt_user.c_str(), _mqtt_pass.c_str(), mqtt_topic.c_str(), 1, true, "offline");
           else mqttclientSecure.connect(_mqtt_id.c_str());
           mqttretry++;
@@ -123,9 +123,9 @@ void connectMqtt() {
         syslog("Trying to connect to MQTT broker", 0);
         while(!mqttclient.connected() && mqttretry < 2){
           Serial.print("...");
-          String mqtt_topic = "data/devices/utility_meter";
+          String mqtt_topic = "plan-d/" + String(apSSID);
           if (_mqtt_auth) mqttclient.connect(_mqtt_id.c_str(), _mqtt_user.c_str(), _mqtt_pass.c_str(), mqtt_topic.c_str(), 1, true, "offline");
-          else mqttclient.connect(_mqtt_id.c_str(), "data/devices/utility_meter", 1, true, "offline");
+          else mqttclient.connect(_mqtt_id.c_str(), mqtt_topic.c_str(), 1, true, "offline");
           mqttretry++;
           reconncount++;
           delay(250);
@@ -140,13 +140,14 @@ void connectMqtt() {
         if(mqttPaused) mqttPaused = false;
         String availabilityTopic = _mqtt_prefix.substring(0, _mqtt_prefix.length()-1);
         if(_mqtt_tls){
-          mqttclientSecure.publish(availabilityTopic.c_str(), "online", true);
-          mqttclientSecure.subscribe("set/devices/utility_meter/reboot");
-          mqttclientSecure.subscribe("set/devices/utility_meter/config");
+          //mqttclientSecure.publish(availabilityTopic, "online", true);
+          availabilityTopic += "/set/reboot";
+          mqttclientSecure.subscribe(availabilityTopic.c_str());
         }
         else{
-          mqttclient.publish(availabilityTopic.c_str(), "online", true);
-          mqttclient.subscribe("set/devices/utility_meter/reboot");
+          //mqttclient.publish(availabilityTopic, "online", true);
+          availabilityTopic += "/set/reboot";
+          mqttclient.subscribe(availabilityTopic.c_str());
         }
         mqttClientError = false;
         if(debugInfo && !mqttWasConnected){
@@ -212,14 +213,14 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
   Serial.print(", ");
   Serial.println(messageTemp);
-  if (String(topic) == "set/devices/utility_meter/reboot") {
+  if (String(topic) == "plan-d/" + String(apSSID) + "/set/reboot") {
     StaticJsonDocument<200> doc;
     deserializeJson(doc, messageTemp);
     if(doc["value"] == "true"){
       saveResetReason("Reboot requested by MQTT");
       if(saveConfig()){
         syslog("Reboot requested from MQTT", 2);
-        pubMqtt("set/devices/utility_meter/reboot", "{\"value\": \"false\"}", false);
+        //pubMqtt("set/devices/utility_meter/reboot", "{\"value\": \"false\"}", false);
         delay(500);
         setReboot();
       }

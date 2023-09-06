@@ -54,7 +54,7 @@ bool _mqtt_en, _mqtt_tls, _mqtt_auth;
 unsigned int _mqtt_port;
 String _mqtt_host, _mqtt_id, _mqtt_user, _mqtt_pass, _mqtt_prefix;
 /*Update*/
-bool _update_auto, _update_autoCheck, _update_start, _update_finish, _dev_fleet, _alpha_fleet, _restore_finish;
+bool _update_auto, _update_autoCheck, _update_start, _update_finish, _dev_fleet, _alpha_fleet, _v2_fleet, _restore_finish;
 unsigned long _fw_new;
 /*Debug*/
 bool _reinit_spiffs;
@@ -89,6 +89,7 @@ static const boolStore configBool[] PROGMEM = {
   {"Reinitialise SPIFFS", &_reinit_spiffs, "RINT_SPIFFS", false},
   {"Dev fleet", &_dev_fleet, "BETA_FLT", false},
   {"Alpha fleet", &_alpha_fleet, "ALPHA_FLT", false},
+  {"V2 fleet", &_v2_fleet, "V2_FLT", false},
   {"Restore finish", &_restore_finish, "RST_FINISH", false},
   {"Home Assistant enabled", &_ha_en, "HA_EN", false},
   {"Re.alto enabled", &_realto_en, "RLT_EN", false},
