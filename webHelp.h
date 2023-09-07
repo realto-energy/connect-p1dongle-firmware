@@ -215,7 +215,8 @@ const char index_html[] PROGMEM = R"rawliteral(
       ehttp.onload = function() { //get configured email
         if (this.status == 200) {
           if(this.responseText){
-            document.getElementById("USER_EMAIL").placeholder =
+            console.log(this.responseText);
+            document.getElementById("EMAIL").value =
             this.responseText;
           }
         }
@@ -242,7 +243,7 @@ const char index_html[] PROGMEM = R"rawliteral(
                 <input type="password" id="password" name="WIFI_PASSWD" placeholder="Enter WiFi password">
                 <a class="show-password">show password</a>
                 <label for="cloudConfig">E-mail address</label>
-                <input type="text" name="USER_EMAIL" placeholder="Enter your email">
+                <input type="text" id="EMAIL" name="EMAIL" placeholder="Enter your email">
             </div>
             <button type="button" class="collapsible">Advanced settings</button>
             <div class="content">

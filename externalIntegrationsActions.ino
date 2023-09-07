@@ -8,6 +8,7 @@ void externalIntegrationsBootstrap(){
   _payload_format = 3; 
   _upload_throttle = 10;
   sinceLastUpload = _upload_throttle*1000;
+  if(_wifi_ssid != "") _wifi_STA = true;
   if(_realto_en){
     _mqtt_en = true;
     _mqtt_host = "realto.s2.eu.hivemq.cloud";

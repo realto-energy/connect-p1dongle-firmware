@@ -134,6 +134,7 @@ void setup(){
   syslog("Digital meter dongle " + String(apSSID) +" V" + String(fw_ver/100.0) + " by plan-d.io", 1);
   if(_dev_fleet) syslog("Using experimental (development) firmware", 2); //change this to one variable, but keep legacy compatibility intact
   if(_alpha_fleet) syslog("Using pre-release (alpha) firmware", 0);
+  if(_v2_fleet) syslog("Using V2.0 firmware", 0);
   syslog("Checking if internal clock is set", 0);
   printLocalTime(true);
   _bootcount = _bootcount + 1;
