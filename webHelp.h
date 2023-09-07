@@ -211,7 +211,17 @@ const char index_html[] PROGMEM = R"rawliteral(
       };
       hhttp.open("GET", "hostname", true);
       hhttp.send();
-        
+      var ehttp = new XMLHttpRequest();
+      ehttp.onload = function() { //get configured email
+        if (this.status == 200) {
+          if(this.responseText){
+            document.getElementById("USER_EMAIL").placeholder =
+            this.responseText;
+          }
+        }
+      };
+      ehttp.open("GET", "email", true);
+      ehttp.send();
     };
     </script>
 </head>

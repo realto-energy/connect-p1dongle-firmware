@@ -1,7 +1,7 @@
 /*The webserver client and its handlers live here*/
 #include "SPIFFS.h"
 extern bool findInConfig(String, int&, int&), processConfigJson(String, String&, bool), processConfigString(String, String&, bool), storeConfigVar(String, int, int);
-extern String returnConfigVar(String, int, int, bool), returnConfig(), returnSvg(), ssidList, releaseChannels(), infoMsg;
+extern String returnConfigVar(String, int, int, bool), returnConfig(), returnSvg(), ssidList, releaseChannels(), infoMsg, _user_email;
 extern const char index_html[];
 extern char apSSID[];
 class WebRequestHandler : public AsyncWebHandler {
@@ -112,6 +112,9 @@ void WebRequestHandler::handleRequest(AsyncWebServerRequest *request){
     }
     else if(request->url() == "/hostname"){
       request->send(200, "text/plain", apSSID);
+    }
+    else if(request->url() == "/email"){
+      request->send(200, "text/plain", _user_email);
     }
     else if(request->url() == "/test" || request->url() == "/test/"){ //temp, just for SPIFFS testing
       request->send_P(200, "text/html", index_html);
