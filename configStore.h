@@ -112,7 +112,7 @@ static const ulongStore configULong[] PROGMEM = {
   {"DSMR keys", &_key_pushlist, "PUSH_DSMR", 65534},
   {"New firmware version", &_fw_new, "FW_NEW", 0},
   {"Upload throttle", &_upload_throttle, "UPL_THROTTLE", 0},
-  {"Re.alto throttle", &_realtoThrottle, "RLT_THROTTLE", 300000}
+  {"Re.alto throttle", &_realtoThrottle, "RLT_THROTTLE", 60}
 };
 
 static const stringStore configString[] PROGMEM = {
@@ -131,7 +131,7 @@ static const stringStore configPass[] PROGMEM = {
     This store can also be used for GDPR sensitive information, e.g. user e-mails.*/
   {"WiFi password", &_wifi_password, "WIFI_PASSWD", ""},
   {"MQTT password", &_mqtt_pass, "MQTT_PASS", ""},
-  {"User email", &_user_email, "USER_EMAIL", ""}
+  {"User email", &_user_email, "EMAIL", ""}
 };
 
 static const floatStore configFloat[] PROGMEM = {

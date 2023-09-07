@@ -190,7 +190,7 @@ void loop(){
       if(scanWifi()) rebootInit = true;
       sinceWifiCheck = 0;
     }
-    if(sinceClockCheck >= 3600){
+    if(sinceClockCheck >= 600000){
       timeSet = false;
       sinceClockCheck = 0;
     }

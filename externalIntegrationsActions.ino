@@ -26,7 +26,7 @@ void externalIntegrationsBootstrap(){
 }
 
 bool realtoUpload(){
-  if(lastRealtoUpload > _upload_throttle*1000){
+  if(lastRealtoUpload > _realtoThrottle*1000){
     String tempTopic = _mqtt_prefix.substring(0, _mqtt_prefix.length()-1);
     pubMqtt(tempTopic, "online", false);
     DynamicJsonDocument realtoData(1024);

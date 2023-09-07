@@ -8,14 +8,16 @@ void setupMqtt() {
   if(_mqtt_tls){
     mqttclientSecure.setClient(*client);
     if(_upload_throttle > 0){
-      mqttclientSecure.setKeepAlive(_upload_throttle +1).setSocketTimeout(_upload_throttle +1);
+      if(_realto_en) mqttclientSecure.setKeepAlive(_realtoThrottle*2).setSocketTimeout(_realtoThrottle*2);
+      else mqttclientSecure.setKeepAlive(_upload_throttle*2).setSocketTimeout(_upload_throttle*2); 
       mqttclientSecure.setBufferSize(1024);
     }
   }
   else {
     mqttclient.setClient(wificlient);
     if(_upload_throttle > 0){
-      mqttclient.setKeepAlive(_upload_throttle +1).setSocketTimeout(_upload_throttle +1);
+      if(_realto_en) mqttclient.setKeepAlive(_realtoThrottle*2).setSocketTimeout(_realtoThrottle*2);
+      else mqttclient.setKeepAlive(_upload_throttle*2).setSocketTimeout(_upload_throttle*2);
       mqttclient.setBufferSize(1024);
     }
   }
@@ -123,7 +125,7 @@ void connectMqtt() {
         syslog("Trying to connect to MQTT broker", 0);
         while(!mqttclient.connected() && mqttretry < 2){
           Serial.print("...");
-          String mqtt_topic = "plan-d/" + String(apSSID);
+          String mqtt_topic = _mqtt_prefix.substring(0, _mqtt_prefix.length()-1);
           if (_mqtt_auth) mqttclient.connect(_mqtt_id.c_str(), _mqtt_user.c_str(), _mqtt_pass.c_str(), mqtt_topic.c_str(), 1, true, "offline");
           else mqttclient.connect(_mqtt_id.c_str(), mqtt_topic.c_str(), 1, true, "offline");
           mqttretry++;
@@ -140,12 +142,12 @@ void connectMqtt() {
         if(mqttPaused) mqttPaused = false;
         String availabilityTopic = _mqtt_prefix.substring(0, _mqtt_prefix.length()-1);
         if(_mqtt_tls){
-          //mqttclientSecure.publish(availabilityTopic, "online", true);
+          mqttclientSecure.publish(availabilityTopic.c_str(), "online", true);
           availabilityTopic += "/set/reboot";
           mqttclientSecure.subscribe(availabilityTopic.c_str());
         }
         else{
-          //mqttclient.publish(availabilityTopic, "online", true);
+          mqttclient.publish(availabilityTopic.c_str(), "online", true);
           availabilityTopic += "/set/reboot";
           mqttclient.subscribe(availabilityTopic.c_str());
         }
