@@ -4,20 +4,23 @@ boolean scanWifi(){
   String savedSSID = _wifi_ssid;
   boolean foundSavedSSID = false;
   String buildSSIDlist = "";
-  for (int i = 0; i < n; ++i) {
-    if(WiFi.SSID(i) != savedSSID){
-      buildSSIDlist += "{\"SSID\": \"";
-      buildSSIDlist += WiFi.SSID(i);
-      buildSSIDlist += "\"}";
-      if(i < n - 1) buildSSIDlist += ", ";
-    }
-    else{
-      foundSavedSSID = true; //if the previously saved SSID is detected, make sure to put it first in the option list
+  String ssidListStart = "{\"SSIDlist\": [";
+  if(n < 1) buildSSIDlist = "{\"SSID\": \"\"}"; //if no networks were found, make sure we don't break the JSON string
+  else{
+    for (int i = 0; i < n; ++i) {
+      if(WiFi.SSID(i) != savedSSID){
+        buildSSIDlist += "{\"SSID\": \"";
+        buildSSIDlist += WiFi.SSID(i);
+        buildSSIDlist += "\"}";
+        if(i < n - 1) buildSSIDlist += ", ";
+      }
+      else{
+        foundSavedSSID = true; 
+      }
     }
   }
   buildSSIDlist += "]}";
-  String ssidListStart = "{\"SSIDlist\": [";
-  if(foundSavedSSID){
+  if(foundSavedSSID){ //if the previously saved SSID is detected, make sure to put it first in the option list
     ssidListStart += "{\"SSID\": \"";
     ssidListStart += savedSSID;
     ssidListStart += "\"},";

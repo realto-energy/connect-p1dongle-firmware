@@ -216,7 +216,10 @@ void loop(){
     if(sinceClockCheck >= 3600){
       if(!timeconfigured) timeSet = false; //if timeConfigured = true, the NTP serivce takes care of reqular clock syncing
       sinceClockCheck = 0;
-    }
+    }/*
+    if(sinceWifiCheck >= 600000){ //rescan wifi networks every 10 minutes
+      wifiScan = true;
+    }*/
     if(sinceConnCheck >= 60000){
       if(_ha_en && debugInfo) hadebugDevice(false);
       checkConnection();
