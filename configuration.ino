@@ -291,10 +291,16 @@ boolean processConfigJson(String jsonString, String &configResponse, bool update
        */
       int retVarType, retVarNum;
       if(findInConfig(keyValue.key().c_str(), retVarType, retVarNum)){
+        log_v("Found %s in config", keyValue.key().c_str());
         if(updateConfig){
           /*If updateConfig is false, just return the current value of the key. If true, update the value.
            * ArduinoJSON type detection is used to doublecheck the validity of the new configuration value.
            */
+          if( strcmp(keyValue.key().c_str(), "WIFI_PASSWD" ) == 0 && strlen(keyValue.value().as<char*>()) == 0) {
+            log_v("Empty value for %s, skipping", keyValue.key().c_str());
+            continue;
+          }
+          log_v("Storing config %s: %s", keyValue.key().c_str(), keyValue.value().as<char*>());
           if(retVarType == 0){
             if (keyValue.value().is<bool>()){
               bool testVar = keyValue.value().as<bool>();
