@@ -10,7 +10,7 @@ void setupMqtt() {
     if(_upload_throttle > 0){
       if(_realto_en) mqttclientSecure.setKeepAlive(_realtoThrottle*2).setSocketTimeout(_realtoThrottle*2);
       else mqttclientSecure.setKeepAlive(_upload_throttle*2).setSocketTimeout(_upload_throttle*2); 
-      mqttclientSecure.setBufferSize(1024);
+      mqttclientSecure.setBufferSize(4096);
     }
   }
   else {
@@ -143,13 +143,14 @@ void connectMqtt() {
         String availabilityTopic = _mqtt_prefix.substring(0, _mqtt_prefix.length()-1);
         if(_mqtt_tls){
           mqttclientSecure.publish(availabilityTopic.c_str(), "online", true);
-          availabilityTopic += "/set/reboot";
-          mqttclientSecure.subscribe(availabilityTopic.c_str());
+          mqttclientSecure.publish((availabilityTopic +"/sys/config").c_str(), returnConfig().c_str(), true);
+          mqttclientSecure.subscribe((availabilityTopic+"/set/reboot").c_str());
+          mqttclientSecure.subscribe((availabilityTopic+"/set/config").c_str());
         }
         else{
           mqttclient.publish(availabilityTopic.c_str(), "online", true);
-          availabilityTopic += "/set/reboot";
-          mqttclient.subscribe(availabilityTopic.c_str());
+          mqttclient.subscribe((availabilityTopic+"/set/reboot").c_str());
+          mqttclient.subscribe((availabilityTopic+"/set/config").c_str());
         }
         mqttClientError = false;
         if(debugInfo && !mqttWasConnected){
@@ -207,6 +208,7 @@ bool pubMqtt(String topic, String payload, boolean retain){
 void callback(char* topic, byte* payload, unsigned int length) {
   time_t now;
   unsigned long dtimestamp = time(&now);
+  String availabilityTopic = _mqtt_prefix.substring(0, _mqtt_prefix.length()-1);
   Serial.print("got mqtt message on ");
   Serial.print(String(topic));
   String messageTemp;
@@ -215,7 +217,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
   Serial.print(", ");
   Serial.println(messageTemp);
-  if (String(topic) == "plan-d/" + String(apSSID) + "/set/reboot") {
+  if (String(topic) == availabilityTopic + "/set/reboot") {
     StaticJsonDocument<200> doc;
     deserializeJson(doc, messageTemp);
     if(doc["value"] == "true"){
@@ -228,7 +230,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
       }
     }
   }
-  if (String(topic) == "set/devices/utility_meter/config") {
+  if (String(topic) == availabilityTopic + "/set/config") {
+    syslog("Got config update over MQTT", 1);
     String configResponse;
     processConfigJson(messageTemp, configResponse, false);
     
