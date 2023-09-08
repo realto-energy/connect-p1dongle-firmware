@@ -17,6 +17,8 @@
 #include "ArduinoJson.h"
 #include <elapsedMillis.h>
 
+#include <queue>
+
 unsigned int fw_ver = 201;
 
 /*V2.0 declarations*/
@@ -114,6 +116,13 @@ boolean timeSet, spiffsMounted;
 
 uint8_t prevButtonState = false;
 
+struct SyslogEntry {
+  std::string msg;
+  unsigned long timestamp;
+};
+
+std::queue<SyslogEntry> syslogBuffer;
+static const size_t syslogBufferSize = 100;
 
 void setup(){
   M5.begin(true, false, true);
@@ -152,6 +161,9 @@ void setup(){
 void loop(){
   blinkLed();
   if(wifiScan) scanWifi();
+
+  proccessSyslogBuffer();
+
   if(sinceRebootCheck > 2000){
     if(rebootInit){
       ESP.restart();
