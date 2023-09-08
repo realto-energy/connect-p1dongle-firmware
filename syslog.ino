@@ -1,3 +1,7 @@
+#include <deque>
+
+static const char preRebootLogFileName[] = "preRebootLog.txt";
+
 void syslog(String msg, int level){
   String logmsg;
   unsigned long dtimestamp; 
@@ -11,7 +15,7 @@ void syslog(String msg, int level){
   else logmsg = logmsg + "MISC: ";
   logmsg = logmsg + msg;
   Serial.println(logmsg);
-  bufferSyslog( { logmsg.c_str(), dtimestamp });
+  bufferSyslog( { std::string(logmsg.c_str()), dtimestamp });
 
   if(level > 0 && spiffsMounted){
     if(sizeFile(SPIFFS, "/syslog.txt") > 8000){
@@ -69,4 +73,64 @@ void proccessSyslogBuffer() {
     log_d("Published syslog message from buffer: %s", entry.msg.c_str());
     syslogBuffer.pop();
   }
+}
+
+std::deque<std::string> getLastLogLines(File file, size_t lineLimit = 10) {
+  std::deque<std::string> last_lines;
+
+  char buffer[512];
+  while (file.available()) {
+    int l = file.readBytesUntil('\n', buffer, sizeof(buffer));
+    buffer[l] = 0;
+    last_lines.push_back(std::string(buffer));
+
+    if (last_lines.size() > lineLimit) {
+      last_lines.pop_front();
+    }
+  }
+
+  log_v("fetched %d last lines ", last_lines.size());
+
+  return last_lines;
+}
+
+void dumpSysLogFile(const char* logFileName, size_t lineLimit = 10) {
+  File file = SPIFFS.open(logFileName);
+  log_d("Opening %s", logFileName);
+  if(!file || file.isDirectory()){
+      Serial.println("- failed to open file for reading");
+      file.close();
+      return;
+  }
+
+  auto lastLines = getLastLogLines(file, lineLimit);
+  publishLogLines(lastLines);
+
+  file.close();
+}
+
+void publishLogLines(std::deque<std::string> lines) {
+  int lineNumber = 0;
+  for (auto& line : lines) {
+    log_v("Publishing log line: %s", line.c_str());
+    DynamicJsonDocument doc(1024);
+    doc["friendly_name"] = "Previous runtime log tail";
+    doc["value"] = line.c_str();
+    doc["entity"] = apSSID;
+    doc["sensorId"] = "previous_syslog";
+    doc["line"] = lineNumber++;
+    String dtopic = "plan-d/" + String(apSSID) + "/sys/previous_syslog"; //JSI: Changed to plan-d/P1XXXXXX/sys/syslog
+    String jsonOutput;
+    serializeJson(doc, jsonOutput);
+    pubMqtt(dtopic, jsonOutput, true);
+  }
+}
+
+
+void dumpSysLog(size_t lineLimit) {
+  log_i("Dumping syslog");
+  static const char* logFileName  = "/syslog.txt";
+  // static const char* logFileName0 = "/syslog0.txt";
+  dumpSysLogFile(logFileName, lineLimit);
+  // dumpSysLogFile(logFileName0);
 }

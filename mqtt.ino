@@ -151,6 +151,7 @@ void connectMqtt() {
           availabilityTopic += "/set/reboot";
           mqttclient.subscribe(availabilityTopic.c_str());
         }
+        dumpSysLog(50);
         mqttClientError = false;
         if(debugInfo && !mqttWasConnected){
           hadebugDevice(true);
