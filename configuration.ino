@@ -62,6 +62,11 @@ boolean saveConfig(){
     _alpha_fleet = false;
     _dev_fleet = false;
   }
+  else if(_rel_chan == "main"){
+    _v2_fleet = false;
+    _alpha_fleet = false;
+    _dev_fleet = false;
+  }
   /*End temp bootstrap*/
   preferences.begin("cofy-config", false);
   for(int i = 0; i < sizeof(configBool)/sizeof(configBool[0]); i++){

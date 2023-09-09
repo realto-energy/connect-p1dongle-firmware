@@ -17,7 +17,7 @@
 #include "ArduinoJson.h"
 #include <elapsedMillis.h>
 
-unsigned int fw_ver = 201;
+unsigned int fw_ver = 202;
 
 /*V2.0 declarations*/
 #include "configStore.h"
