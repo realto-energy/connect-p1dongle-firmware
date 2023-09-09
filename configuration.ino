@@ -32,6 +32,12 @@ boolean restoreConfig(){
     else *configPass[i].var = configPass[i].defaultValue;
   }
   preferences.end();
+  /*Temp bootstrap for pre-V2.0 compatibility*/
+  if(_dev_fleet) _rel_chan = "develop";
+  else if(_alpha_fleet) _rel_chan = "alpha";
+  else if(_v2_fleet) _rel_chan = "V2";
+  else _rel_chan = "main";
+  /*End temp bootstrap*/
   return true;
 }
 
@@ -40,6 +46,23 @@ boolean saveConfig(){
    * using its configured key name. If the key,value pair is already present, it will be overwritten, if not, it will be created.
    * Close the NVS when done.
    */
+  /*Temp bootstrap for pre-V2.0 compatibility*/
+  if(_rel_chan == "develop") {
+    _dev_fleet = true;
+    _alpha_fleet = false;
+    _v2_fleet = false;
+  }
+  else if(_rel_chan == "alpha"){
+    _alpha_fleet= true;
+    _dev_fleet = false;
+    _v2_fleet = false;
+  }
+  else if(_rel_chan == "V2"){
+    _v2_fleet = true;
+    _alpha_fleet = false;
+    _dev_fleet = false;
+  }
+  /*End temp bootstrap*/
   preferences.begin("cofy-config", false);
   for(int i = 0; i < sizeof(configBool)/sizeof(configBool[0]); i++){
     preferences.putBool(configBool[i].configName.c_str(), *configBool[i].var);
@@ -195,9 +218,9 @@ String returnConfigVar(String varName, int varType, int varNum, bool returnExten
     configVar["defaultValue"] = configString[varNum].defaultValue;
   }
   else if(varType == 5){
-    /*Passwords do not display values in the JSON response*/
     configVar["varName"] = configPass[varNum].varName;
     configVar["type"] = "password";
+    configVar["value"] = *configPass[varNum].var;
   }
   serializeJson(doc, jsonOutput);
   if(returnExtended){
@@ -450,7 +473,7 @@ boolean isNumeric(String &varValue, long &longValue, unsigned long &ulongValue, 
 String returnConfig(){
   /*Return the entire NVS configuration as one single JSON string*/
   String jsonOutput;
-  DynamicJsonDocument doc(4096);
+  DynamicJsonDocument doc(5120);
   for(int i = 0; i < sizeof(configBool)/sizeof(configBool[0]); i++){
     JsonObject configVar  = doc.createNestedObject(configBool[i].configName);
     configVar["varName"] = configBool[i].varName;
@@ -486,12 +509,41 @@ String returnConfig(){
     configVar["value"] = *configString[i].var;
     configVar["defaultValue"] = configString[i].defaultValue;
   }
+  /*Passwords and sensitive data (e.g. GDPR stuff) are not included in the config file, only an indication if the data is present.
+   * These data can still be accessed directly.
+   */
   for(int i = 0; i < sizeof(configPass)/sizeof(configPass[0]); i++){
     JsonObject configVar  = doc.createNestedObject(configPass[i].configName);
     configVar["varName"] = configPass[i].varName;
     configVar["type"] = "password";
-    if(*configString[i].var != "") configVar["filled"] = true;
+    if(*configPass[i].var != "") configVar["filled"] = true;
   }
   serializeJson(doc, jsonOutput);
   return jsonOutput;
+}
+
+String returnBasicConfig(){
+  /*Return a JSON string containing some basic config settings, useful to send over MQTT*/
+  String basicParameters[] = {"REL_CHAN", "reboots", "UPD_AUTO", "UPD_AUTOCHK", "RLT_EN", "RLT_THROTTLE", "EMAIL", "WIFI_SSID", "MQTT_HOST", "MQTT_PORT", "MQTT_ID", "MQTT_USER", "MQTT_PFIX"};
+  String response;
+  for(int i = 0; i < sizeof(basicParameters)/sizeof(basicParameters[0]); i++){
+    String foundInConfig;
+    int retVarType, retVarNum;
+    /*Check if the NVS key name exists*/ 
+    if(findInConfig(basicParameters[i], retVarType, retVarNum)){
+      /*Build a JSON response containing the new value for every updated key, concatenate if there are multiple*/
+      foundInConfig = returnConfigVar(basicParameters[i], retVarType, retVarNum, true);
+      if(foundInConfig != ""){
+        response += foundInConfig.substring(1, foundInConfig.length()-1);
+        response += ",";
+      }
+    }
+  }
+  /*Tidy up the concatenation*/
+  if(response != ""){
+    response = response.substring(0, response.length()-1);
+    response = "{\"" + String(apSSID) + "\":{" + response;
+    response += "}}";
+  }
+  return response;
 }

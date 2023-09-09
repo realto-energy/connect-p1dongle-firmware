@@ -116,13 +116,10 @@ void initWifi(){
       setClock(true);
       printLocalTime(true);
       if(client){
-        Serial.println(ESP.getFreeHeap());
         syslog("Setting up TLS/SSL client", 0);
-        Serial.println(ESP.getFreeHeap());
         client->setUseCertBundle(true);
         // Load certbundle from SPIFFS
         File file = SPIFFS.open("/cert/x509_crt_bundle.bin", "r");
-        Serial.println(ESP.getFreeHeap());
         if(!file || file.isDirectory()) {
             syslog("Could not load cert bundle from SPIFFS", 3);
             bundleLoaded = false;

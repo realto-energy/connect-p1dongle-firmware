@@ -248,7 +248,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             <button type="button" class="collapsible">Advanced settings</button>
             <div class="content">
                 <label for="release_channel">Release channel</label>
-                <select id="release_channel" name="release_channel">
+                <select id="release_channel" name="REL_CHAN">
                 </select></p>
             </div>
             <button type="submit" class="submit">Submit</button>

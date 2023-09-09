@@ -56,6 +56,7 @@ String _mqtt_host, _mqtt_id, _mqtt_user, _mqtt_pass, _mqtt_prefix;
 /*Update*/
 bool _update_auto, _update_autoCheck, _update_start, _update_finish, _dev_fleet, _alpha_fleet, _v2_fleet, _restore_finish;
 unsigned long _fw_new;
+String _rel_chan;
 /*Debug*/
 bool _reinit_spiffs;
 unsigned int _bootcount;
@@ -110,7 +111,7 @@ static const uintStore configUInt[] PROGMEM = {
 
 static const ulongStore configULong[] PROGMEM = {
   {"DSMR keys", &_key_pushlist, "PUSH_DSMR", 65534},
-  {"New firmware version", &_fw_new, "FW_NEW", 0},
+  //{"New firmware version", &_fw_new, "FW_NEW", 0},
   {"Upload throttle", &_upload_throttle, "UPL_THROTTLE", 0},
   {"Re.alto throttle", &_realtoThrottle, "RLT_THROTTLE", 60}
 };
@@ -123,6 +124,7 @@ static const stringStore configString[] PROGMEM = {
   {"MQTT topic prefix", &_mqtt_prefix, "MQTT_PFIX", "data/devices/beta_meter/"},
   {"HA device name", &_ha_device, "HA_DEVICE", "Beta meter"},
   {"Last reset reason (firmware)", &_last_reset, "LAST_RESET", ""},
+  {"Release channel", &_rel_chan, "REL_CHAN", "main"},
   {"Temp string", &_tempString, "TMP_STR", ""}
 };
 
