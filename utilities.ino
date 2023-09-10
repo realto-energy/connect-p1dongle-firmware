@@ -28,7 +28,6 @@ boolean scanWifi(){
   ssidList = ssidListStart + buildSSIDlist;
   int len = ssidList.length();
   if(ssidList.charAt(len-4) == ',') ssidList.remove(len-4);
-  Serial.println(ssidList);
   wifiScan = false;
   WiFi.scanDelete();
   return foundSavedSSID;
@@ -131,7 +130,6 @@ void initWifi(){
         // Load loadCertBundle into WiFiClientSecure
         if(file && file.size() > 0) {
             if(!client->loadCertBundle(file, file.size())){
-                Serial.println(ESP.getFreeHeap());
                 syslog("WiFiClientSecure: could not load cert bundle", 3);
                 bundleLoaded = false;
                 unitState = 7;

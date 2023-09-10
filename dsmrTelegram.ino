@@ -144,7 +144,8 @@ void processMeterTelegram(String rawTelegram, String rawCRC){
       }
       sinceMeterCheck = 0; //The metertime key is used to check for the presence of the digital meter
       if(meterError){
-        unitState = 4; //needs a check for WIFI_STA here
+        if(_wifi_STA) unitState = 4;
+        else unitState = 0;
         syslog("Meter reconnected", 1);
         meterError = false;
       }
