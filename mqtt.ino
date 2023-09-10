@@ -234,7 +234,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   if (String(topic) == availabilityTopic + "/set/config") {
     syslog("Got config update over MQTT", 1);
     String configResponse;
-    processConfigJson(messageTemp, configResponse, false);
+    processConfigJson(messageTemp, configResponse, true);
     
   }
 }
