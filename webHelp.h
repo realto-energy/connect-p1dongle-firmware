@@ -349,3 +349,172 @@ const char index_html[] PROGMEM = R"rawliteral(
 </html>
 
 )rawliteral";
+
+const char test_html[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Config Form</title>
+</head>
+
+<body>
+    <h2>Configuration Form</h2>
+    <form id="configForm">
+        <!-- Dropdown for WiFi Network -->
+        <label for="WIFI_SSID">WiFi Network:</label>
+        <select id="WIFI_SSID" name="WIFI_SSID"></select><br><br>
+
+        <!-- Dropdown for Release Channel -->
+        <label for="REL_CHAN">Release Channel:</label>
+        <select id="REL_CHAN" name="REL_CHAN"></select><br><br>
+
+        <!-- Checkbox for Full DSMR telegram -->
+        <label for="PUSH_FULL">Full DSMR telegram:</label>
+        <input type="checkbox" id="PUSH_FULL" name="PUSH_FULL"><br><br>
+
+        <!-- Numeric Input -->
+        <label for="MQTT_PORT">MQTT Port:</label>
+        <input type="number" id="MQTT_PORT" name="MQTT_PORT"><br><br>
+
+        <!-- Checkbox -->
+        <label for="WIFI_STA">WiFi Station Mode:</label>
+        <input type="checkbox" id="WIFI_STA" name="WIFI_STA"><br><br>
+
+        <!-- Password Input -->
+        <label for="WIFI_PASSWD">WiFi Password:</label>
+        <input type="password" id="WIFI_PASSWD" name="WIFI_PASSWD"><br><br>
+
+        <!-- Email Input -->
+        <label for="EMAIL">User Email:</label>
+        <input type="email" id="EMAIL" name="EMAIL"><br><br>
+
+        <input type="submit" value="Submit">
+    </form>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Fetch the SSID list and populate the dropdown
+            fetch('/wifi')
+                .then(response => response.json())
+                .then(data => {
+                    const ssidSelect = document.getElementById('WIFI_SSID');
+                    data.SSIDlist.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.SSID;
+                        option.textContent = item.SSID;
+                        ssidSelect.appendChild(option);
+                    });
+
+                    // Fetch the release channels and populate the dropdown
+                    return fetch('/releasechan');
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const releaseChannelSelect = document.getElementById('REL_CHAN');
+                    data.Releasechannels.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.channel;
+                        option.textContent = item.channel;
+                        releaseChannelSelect.appendChild(option);
+                    });
+
+                    // After populating the dropdowns, fetch the configuration data
+                    return fetch('/config');
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const inputs = document.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => {
+                        const name = input.name;
+                        if (data[name]) {
+                            const type = data[name].type;
+                            const value = data[name].value;
+                            switch (type) {
+                                case 'bool':
+                                    if (input.type === 'checkbox') {
+                                        input.checked = value;
+                                    } else {
+                                        input.value = value ? 'true' : 'false';
+                                    }
+                                    break;
+                                case 'int32':
+                                case 'uint32':
+                                case 'uint64':
+                                case 'string':
+                                    input.value = value;
+                                    break;
+                                case 'password':
+                                    if (data[name].filled) {
+                                        input.placeholder = 'Password is set';
+                                    }
+                                    break;
+                                default:
+                                    console.warn(`Unhandled type: ${type} for input: ${name}`);
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching or processing data:', error);
+            // Mark password fields as changed when their value is modified
+            const passwordFields = document.querySelectorAll('input[type="password"]');
+            passwordFields.forEach(field => {
+                field.addEventListener('input', function() {
+                    this.setAttribute('data-changed', 'true');
+                });
+            });
+
+            // Handle form submission
+            const form = document.getElementById('configForm');
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const formData = new FormData(form);
+                const jsonData = {};
+
+                // Handle unchecked checkboxes
+                const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    jsonData[checkbox.name] = checkbox.checked;
+                });
+
+                formData.forEach((value, key) => {
+                    const inputElement = document.querySelector(`[name="${key}"]`);
+                    if (inputElement.type !== 'checkbox') {
+                        if (inputElement.type === 'password' || inputElement.type === 'email') {
+                            if (value && (inputElement.getAttribute('data-changed') === 'true' || !inputElement.placeholder.includes('set'))) {
+                                jsonData[key] = value;
+                            }
+                        } else {
+                            jsonData[key] = value;
+                        }
+                    }
+                });
+
+                console.log('Submitting JSON:', JSON.stringify(jsonData));
+
+                fetch('/config', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(jsonData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Server response:', data);
+                })
+                .catch(error => {
+                    console.error('Error submitting data:', error);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
+
+)rawliteral";
