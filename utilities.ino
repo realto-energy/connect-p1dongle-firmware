@@ -136,7 +136,6 @@ void initWifi(){
             }
         }
         file.close();
-        Serial.println(ESP.getFreeHeap());
       } 
       else {
         syslog("Unable to create SSL client", 2);
