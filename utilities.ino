@@ -1,33 +1,29 @@
 boolean scanWifi(){
+  /*Scan all WiFi networks in range and compile their SSIDs into a JSON array*/
   syslog("Performing wifi scan", 0);
-  int16_t n = WiFi.scanNetworks();
-  String savedSSID = _wifi_ssid;
   boolean foundSavedSSID = false;
-  String buildSSIDlist = "";
-  String ssidListStart = "{\"SSIDlist\": [";
-  if(n < 1) buildSSIDlist = "{\"SSID\": \"\"}"; //if no networks were found, make sure we don't break the JSON string
-  else{
-    for (int i = 0; i < n; ++i) {
-      if(WiFi.SSID(i) != savedSSID){
-        buildSSIDlist += "{\"SSID\": \"";
-        buildSSIDlist += WiFi.SSID(i);
-        buildSSIDlist += "\"}";
-        if(i < n - 1) buildSSIDlist += ", ";
-      }
-      else{
-        foundSavedSSID = true; 
-      }
+  int16_t n = WiFi.scanNetworks();
+  /*Check if the previously saved SSID is detected.*/
+  for (int i = 0; i < n; ++i) {
+    if(WiFi.SSID(i) = _wifi_ssid){
+      foundSavedSSID = true;
     }
   }
-  buildSSIDlist += "]}";
-  if(foundSavedSSID){ //if the previously saved SSID is detected, make sure to put it first in the option list
-    ssidListStart += "{\"SSID\": \"";
-    ssidListStart += savedSSID;
-    ssidListStart += "\"},";
+  DynamicJsonDocument doc(1024);
+  JsonArray data = doc.createNestedArray("SSIDlist");
+  int offset = 0;
+  /*If the previously saved SSID is present, put it first in the JSON array so the webmin HTML selects this SSID as the default option to display in the dropdown selection*/
+  if(foundSavedSSID){
+    data[0]["SSID"] = _wifi_ssid;
+    offset = 1;
   }
-  ssidList = ssidListStart + buildSSIDlist;
-  int len = ssidList.length();
-  if(ssidList.charAt(len-4) == ',') ssidList.remove(len-4);
+  for (int i = 0; i < n; ++i) {
+    if(WiFi.SSID(i) != _wifi_ssid){
+      data[offset]["SSID"] = WiFi.SSID(i);
+      offset++;
+    }
+  }
+  serializeJson(doc, ssidList);
   wifiScan = false;
   WiFi.scanDelete();
   return foundSavedSSID;
