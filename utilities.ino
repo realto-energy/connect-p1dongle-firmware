@@ -26,6 +26,9 @@ boolean scanWifi(){
     ssidListStart += "\"},";
   }
   ssidList = ssidListStart + buildSSIDlist;
+  int len = ssidList.length();
+  if(ssidList.charAt(len-4) == ',') ssidList.remove(len-4);
+  Serial.println(ssidList);
   wifiScan = false;
   WiFi.scanDelete();
   return foundSavedSSID;
