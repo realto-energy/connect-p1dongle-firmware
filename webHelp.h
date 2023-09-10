@@ -237,7 +237,18 @@ const char index_html[] PROGMEM = R"rawliteral(
         <h3><span id="HostName">STATE</h3>
         <h3><span id="InfoMessage" style='text-align:center;color:red;' ></span></h3>
         
-
+        <div id='l1' name='l1'></div>
+        <div style='text-align:center'>
+          <table style='width:100%'>
+            <tr>
+              <td style='width:25%'><svg><image id="WifiStrength" class="icons" width="48" height="48" src="svg" title="No wifi"></svg></td>
+              <td style='width:25%'><svg><image id="Cloud" class="icons" width="48" height="48" src="svg"></svg></td>
+              <td style='width:25%'><img id="DigitalMeter" class="icons" width="48" height="48" src="svg"></td>
+              <td style='width:25%'><svg><image id="ExternalIO" class="icons" width="48" height="48" src="svg"></svg></td>
+            </tr>
+          </table>
+        </div>
+        <div></div>
         
         <form id="configForm" method="post" action="config" name="myForm" enctype="text/plain" accept-charset="utf-8">
             <button type="button" class="collapsible active">Basic settings</button>
