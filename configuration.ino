@@ -103,18 +103,29 @@ boolean resetConfig() {
   /*Erase the wifi configuration and put the dongle back into AP mode on next boot, 
    * or completely erase the NVS to perform a factory reset.
    */
-  preferences.begin("cofy-config", false);
   if(resetWifi){
+    syslog("WiFi credentials reset by user", 2);
+    saveResetReason("Rebooting for WiFi reset");
+    if(saveConfig()){
+      delay(200);
+    }
+    preferences.begin("cofy-config", false);
     preferences.remove("WIFI_SSID");
     preferences.remove("WIFI_PASSWD");
     preferences.remove("WIFI_STA");
-    preferences.putString("LAST_RESET", "<timestamp>Restarting for config reset");
   }
   else if(factoryReset){
+    syslog("Factory reset by user", 2);
+    saveResetReason("Rebooting for factory reset");
+    if(saveConfig()){
+      delay(200);
+    }
     preferences.clear();
   }
   preferences.end();
-  return true;
+  delay(200);
+  rebootInit = true;
+  return rebootInit;
 }
 
 bool findInConfig(String param, int &varType, int &varNum){
