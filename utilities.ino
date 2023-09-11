@@ -121,6 +121,7 @@ void initWifi(){
         File file = SPIFFS.open("/cert/x509_crt_bundle.bin", "r");
         if(!file || file.isDirectory()) {
             syslog("Could not load cert bundle from SPIFFS", 3);
+            client->setUseCertBundle(false);
             bundleLoaded = false;
             unitState = 7;
         }
@@ -128,6 +129,7 @@ void initWifi(){
         if(file && file.size() > 0) {
             if(!client->loadCertBundle(file, file.size())){
                 syslog("WiFiClientSecure: could not load cert bundle", 3);
+                client->setUseCertBundle(false);
                 bundleLoaded = false;
                 unitState = 7;
             }
@@ -136,6 +138,7 @@ void initWifi(){
       } 
       else {
         syslog("Unable to create SSL client", 2);
+        client->setUseCertBundle(false);
         unitState = 7;
         httpsError = true;
       }

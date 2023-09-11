@@ -32,6 +32,14 @@ const char* github_root_ca= \
 
 void restoreSPIFFS(){
   listDir(SPIFFS, "/", 0);
+  /*Load the static cert into the https client*/
+  if(client){
+    syslog("Setting up fallback TLS/SSL client", 2);
+    client->setCACert(github_root_ca);
+  }
+  else{
+    syslog("Failed to setup fallback TLS/SSL client", 3);
+  }
   boolean repoOK = false;
   syslog("Checking remote repository", 0);
   String baseUrl = "https://raw.githubusercontent.com/realto-energy/connect-p1dongle-firmware/";
@@ -44,8 +52,10 @@ void restoreSPIFFS(){
   Serial.println(fileUrl);
   if (https.begin(*client, fileUrl)) {
     int httpCode = https.GET();
+    Serial.println(httpCode);
     if (httpCode > 0) {
       if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+        syslog("Found remote TLS bundle", 0);
         repoOK = true;
       }
       else{
@@ -53,10 +63,29 @@ void restoreSPIFFS(){
       }
     } 
     else {
-      syslog("Could not connect to repository, HTTPS code " + String(https.errorToString(httpCode)), 2);
+      syslog("Could not connect to repository, HTTPS code " + String(httpCode) +" " + String(https.errorToString(httpCode)), 2);
     }
     https.end();
   }
+  Serial.println(fileUrl);
+  if (https.begin(*client, fileUrl)) {
+    int httpCode = https.GET();
+    Serial.println(httpCode);
+    if (httpCode > 0) {
+      if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+        syslog("Found remote TLS bundle", 0);
+        repoOK = true;
+      }
+      else{
+        syslog("Could not fetch file, HTTPS code " + String(httpCode), 2);
+      }
+    } 
+    else {
+      syslog("Could not connect to repository, HTTPS code " + String(httpCode) +" " + String(https.errorToString(httpCode)), 2);
+    }
+    https.end();
+  }
+  delay(1000);
   if(repoOK){
     /*Reformat the SPIFFS*/
     syslog("Formatting", 0);
@@ -67,19 +96,13 @@ void restoreSPIFFS(){
     else{
       syslog("Error formatting", 3);
     }
-    /*Load the static cert into the https client*/
-    if(client){
-      syslog("Setting up fallback TLS/SSL client", 2);
-      client->setCACert(github_root_ca);
-    }
-    else{
-      syslog("Failed to setup fallback TLS/SSL client", 3);
-    }
+    delay(1000);
     /*Next, store a file to SPIFFS*/
     syslog("Downloading cert bundle", 0);
     Serial.println(fileUrl);
     if (https.begin(*client, fileUrl)) {
       int httpCode = https.GET();
+      Serial.println(httpCode);
       if (httpCode > 0) {
         if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
           SPIFFS.remove(s);
@@ -99,7 +122,7 @@ void restoreSPIFFS(){
         }
       } 
       else {
-        syslog("Could not connect to repository, HTTPS code " + String(https.errorToString(httpCode)), 2);
+        syslog("Could not connect to repository, HTTPS code " + String(httpCode) +" " +  String(https.errorToString(httpCode)), 2);
       }
       https.end();
     }
