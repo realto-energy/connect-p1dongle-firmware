@@ -18,14 +18,14 @@ public:
 
 bool WebRequestHandler::canHandle(AsyncWebServerRequest *request){
   /*Add custom headers here with request->addInterestingHeader("ANY");*/
-  /*Serial.println("Webrequest");
+  Serial.println("Webrequest");
   Serial.println(request->method());
   int headers = request->headers();
   int i;
   for(i=0;i<headers;i++){
     AsyncWebHeader* h = request->getHeader(i);
     Serial.printf("HEADER[%s]: %s\n", h->name().c_str(), h->value().c_str());
-  }*/
+  }
   return true;
 }
 

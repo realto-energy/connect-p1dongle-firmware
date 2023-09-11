@@ -65,7 +65,7 @@ void initSPIFFS(){
     }
     /*Check SPIFFS file I/O*/
     syslog("Testing SPIFFS file I/O... ", 0);
-    if(!writeFile(SPIFFS, "/test.txt", "Hello ") || !appendFile(SPIFFS, "/test.txt", "World!\r\n")  || !readFile(SPIFFS, "/test.txt")){
+    if(!writeFile(SPIFFS, "/test.txt", "Hello ") || !appendFile(SPIFFS, "/test.txt", "World!\r\n")  || !readFile(SPIFFS, "/test.txt") || !deleteFile(SPIFFS, "/test.txt")){
       syslog("Could not perform file I/O on SPIFFS", 3);
       spiffsMounted = false;
     }
@@ -79,6 +79,7 @@ void initSPIFFS(){
   }
   else if(!_reinit_spiffs && !spiffsMounted){ //if SPIFFS couldn't be mounted, try a restart first
     _reinit_spiffs = true;
+    saveResetReason("Rebooting to retry SPIFFS access");
     saveConfig();
     delay(500);
     ESP.restart();
@@ -334,9 +335,11 @@ bool renameFile(fs::FS &fs, const char * path1, const char * path2){
     }
 }
 
-void deleteFile(fs::FS &fs, const char * path){
+bool deleteFile(fs::FS &fs, const char * path){
     if(fs.remove(path)){
+      return true;
     } else {
+      return false;
     }
 }
 

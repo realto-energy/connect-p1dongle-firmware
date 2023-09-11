@@ -459,6 +459,7 @@ const char test_html[] PROGMEM = R"rawliteral(
                 })
                 .catch(error => {
                     console.error('Error fetching or processing data:', error);
+                });
             // Mark password fields as changed when their value is modified
             const passwordFields = document.querySelectorAll('input[type="password"]');
             passwordFields.forEach(field => {
