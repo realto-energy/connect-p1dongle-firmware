@@ -125,15 +125,15 @@ static const stringStore configString[] PROGMEM = {
   {"HA device name", &_ha_device, "HA_DEVICE", "Beta meter"},
   {"Last reset reason (firmware)", &_last_reset, "LAST_RESET", ""},
   {"Release channel", &_rel_chan, "REL_CHAN", "main"},
-  {"Temp string", &_tempString, "TMP_STR", ""}
+  {"Temp string", &_tempString, "TMP_STR", ""},
+  {"User email", &_user_email, "EMAIL", ""}
 };
 
 static const stringStore configPass[] PROGMEM = {
   /*Although also Strings, passwords get their own data store as they are never returned as plaintext (contrary to Strings)
     This store can also be used for GDPR sensitive information, e.g. user e-mails.*/
   {"WiFi password", &_wifi_password, "WIFI_PASSWD", ""},
-  {"MQTT password", &_mqtt_pass, "MQTT_PASS", ""},
-  {"User email", &_user_email, "EMAIL", ""}
+  {"MQTT password", &_mqtt_pass, "MQTT_PASS", ""}
 };
 
 static const floatStore configFloat[] PROGMEM = {

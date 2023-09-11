@@ -490,6 +490,14 @@ String returnConfig(){
   /*Return the entire NVS configuration as one single JSON string*/
   String jsonOutput;
   DynamicJsonDocument doc(5120);
+  JsonObject hostVar  = doc.createNestedObject("HOSTNAME");
+  hostVar["varName"] = "Dongle hostname";
+  hostVar["type"] = "string";
+  hostVar["value"] = String(apSSID);
+  JsonObject fwVar  = doc.createNestedObject("FW_VER");
+  fwVar["varName"] = "Firmware version";
+  fwVar["type"] = "numeric";
+  fwVar["value"] = round2(fw_ver/100.0);
   for(int i = 0; i < sizeof(configBool)/sizeof(configBool[0]); i++){
     JsonObject configVar  = doc.createNestedObject(configBool[i].configName);
     configVar["varName"] = configBool[i].varName;
