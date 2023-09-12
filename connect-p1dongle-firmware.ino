@@ -162,7 +162,7 @@ void loop(){
   blinkLed();
   if(wifiScan) scanWifi();
 
-  proccessSyslogBuffer();
+  //proccessSyslogBuffer();
 
   if(sinceRebootCheck > 2000){
     if(rebootInit){
