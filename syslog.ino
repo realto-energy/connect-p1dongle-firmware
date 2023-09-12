@@ -17,8 +17,21 @@ void syslog(String msg, int level){
   Serial.println(logmsg);
   //bufferSyslog( { std::string(logmsg.c_str()), dtimestamp });
 
+  Serial.println(logmsg);
+  if(_mqtt_en && !mqttClientError && !mqttHostError && level > 0 && level < 4){
+    DynamicJsonDocument doc(1024);
+    doc["friendly_name"] = "System log";
+    doc["value"] = logmsg;
+    doc["entity"] = apSSID;
+    doc["sensorId"] = "syslog";
+    doc["timestamp"] = dtimestamp;
+    String dtopic = "plan-d/" + String(apSSID) + "/sys/syslog"; //JSI: Changed to plan-d/P1XXXXXX/sys/syslog
+    String jsonOutput;
+    serializeJson(doc, jsonOutput);
+    pubMqtt(dtopic, jsonOutput, true);
+  }
   if(level > 0 && spiffsMounted){
-    if(sizeFile(SPIFFS, "/syslog.txt") > 8000){
+    if(sizeFile(SPIFFS, "/syslog.txt") > 5120){
       Serial.println("Swapping logfiles");
       deleteFile(SPIFFS, "/syslog0.txt");
       renameFile(SPIFFS, "/syslog.txt", "/syslog0.txt");
