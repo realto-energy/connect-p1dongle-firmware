@@ -104,10 +104,9 @@ String ssidList;
 char apSSID[] = "P1000000";
 byte mac[6];
 bool rebootInit;
-bool mqttHostError = true;
-bool mqttClientError = true;
 
-bool wifiError, mqttWasConnected, httpsError, meterError, eidError, wifiSave, wifiScan, debugInfo, timeconfigured;
+
+bool wifiError, mqttWasConnected, wifiSave, wifiScan, debugInfo, timeconfigured;
 bool haDiscovered = false;
 
 boolean timeSet, spiffsMounted;

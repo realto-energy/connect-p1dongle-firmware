@@ -330,7 +330,6 @@ boolean processConfigJson(String jsonString, String &configResponse, bool update
   boolean isJson = false;
   DynamicJsonDocument jsonDoc(1024);
   if(DeserializationError::Ok == deserializeJson(jsonDoc, jsonString)){
-    Serial.println("serialisation succeeded");
     /*First check if the string is valid JSON.
      * Note that ArduinoJSON DeserializationError detection is not very robust, and malformed JSON strings might still be flagged valid.
      * The additional checks further on should however catch any invalid configuration settings.
