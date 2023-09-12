@@ -15,7 +15,7 @@ void syslog(String msg, int level){
   else logmsg = logmsg + "MISC: ";
   logmsg = logmsg + msg;
   Serial.println(logmsg);
-  bufferSyslog( { std::string(logmsg.c_str()), dtimestamp });
+  //bufferSyslog( { std::string(logmsg.c_str()), dtimestamp });
 
   if(level > 0 && spiffsMounted){
     if(sizeFile(SPIFFS, "/syslog.txt") > 8000){

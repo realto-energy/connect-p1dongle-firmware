@@ -20,7 +20,7 @@
 #include <elapsedMillis.h>
 
 #include <queue>
-unsigned int fw_ver = 203;
+unsigned int fw_ver = 204;
 
 /*V2.0 declarations*/
 #include "configStore.h"
@@ -162,7 +162,7 @@ void loop(){
   blinkLed();
   if(wifiScan) scanWifi();
 
-  proccessSyslogBuffer();
+  //proccessSyslogBuffer();
 
   if(sinceRebootCheck > 2000){
     if(rebootInit){
