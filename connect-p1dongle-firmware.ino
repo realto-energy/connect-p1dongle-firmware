@@ -18,7 +18,7 @@
 #include <elapsedMillis.h>
 
 #include <queue>
-unsigned int fw_ver = 204;
+unsigned int fw_ver = 203;
 
 /*V2.0 declarations*/
 #include "configStore.h"
