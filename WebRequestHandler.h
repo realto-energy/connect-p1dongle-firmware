@@ -1,7 +1,7 @@
 /*The webserver client and its handlers live here*/
 #include "SPIFFS.h"
 extern bool findInConfig(String, int&, int&), processConfigJson(String, String&, bool), processConfigString(String, String&, bool), storeConfigVar(String, int, int);
-extern String returnConfigVar(String, int, int, bool), returnConfig(), returnSvg(), ssidList, releaseChannels(), infoMsg, _user_email;
+extern String returnConfigVar(String, int, int, int), returnConfig(), returnBasicConfig(), returnSvg(), ssidList, releaseChannels(), infoMsg, _user_email;
 extern const char index_html[], test_html[], css[];
 extern char apSSID[];
 class WebRequestHandler : public AsyncWebHandler {
@@ -81,7 +81,7 @@ void WebRequestHandler::handleRequest(AsyncWebServerRequest *request){
              storeConfigVar(p->value(), retVarType, retVarNum);
             }
             /*Build a JSON response containing the new value for every updated key, concatenate if there are multiple*/
-            foundInConfig = returnConfigVar(p->name().c_str(), retVarType, retVarNum, true);
+            foundInConfig = returnConfigVar(p->name().c_str(), retVarType, retVarNum, 1);
             if(foundInConfig != ""){
               response += foundInConfig.substring(1, foundInConfig.length()-1);
               response += ",";
