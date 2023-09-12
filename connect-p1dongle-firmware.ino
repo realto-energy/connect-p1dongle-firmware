@@ -1,4 +1,6 @@
 #include "rom/rtc.h"
+#include <esp_int_wdt.h>
+#include <esp_task_wdt.h>
 #include "M5Atom.h"
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -18,7 +20,7 @@
 #include <elapsedMillis.h>
 
 #include <queue>
-unsigned int fw_ver = 203;
+unsigned int fw_ver = 204;
 
 /*V2.0 declarations*/
 #include "configStore.h"
@@ -164,7 +166,8 @@ void loop(){
 
   if(sinceRebootCheck > 2000){
     if(rebootInit){
-      ESP.restart();
+      //ESP.restart();
+      forcedReset();
     }
     sinceRebootCheck = 0;
   }

@@ -107,7 +107,8 @@ boolean startUpdate(){
                     preferences.end();
                     SPIFFS.end();
                     delay(500);
-                    ESP.restart();
+                    //ESP.restart();
+                    forcedReset();
                   } else {
                     syslog("Firmware upgrade not finished? Something went wrong!", 3);
                     _update_start = false;
@@ -308,7 +309,8 @@ boolean finishUpdate(bool restore){
       saveConfig();
       SPIFFS.end();
       delay(500);
-      ESP.restart();
+      //ESP.restart();
+      forcedReset();
     }
     if(mqttPaused){
       mqttPaused = false;
