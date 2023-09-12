@@ -18,8 +18,7 @@
 #include <elapsedMillis.h>
 
 #include <queue>
-
-unsigned int fw_ver = 201;
+unsigned int fw_ver = 203;
 
 /*V2.0 declarations*/
 #include "configStore.h"
@@ -106,10 +105,9 @@ String ssidList;
 char apSSID[] = "P1000000";
 byte mac[6];
 bool rebootInit;
-bool mqttHostError = true;
-bool mqttClientError = true;
 
-bool wifiError, mqttWasConnected, httpsError, meterError, eidError, wifiSave, wifiScan, debugInfo, timeconfigured;
+
+bool wifiError, mqttWasConnected, wifiSave, wifiScan, debugInfo, timeconfigured;
 bool haDiscovered = false;
 
 boolean timeSet, spiffsMounted;
@@ -228,7 +226,10 @@ void loop(){
     if(sinceClockCheck >= 3600){
       if(!timeconfigured) timeSet = false; //if timeConfigured = true, the NTP serivce takes care of reqular clock syncing
       sinceClockCheck = 0;
-    }
+    }/*
+    if(sinceWifiCheck >= 600000){ //rescan wifi networks every 10 minutes
+      wifiScan = true;
+    }*/
     if(sinceConnCheck >= 60000){
       if(_ha_en && debugInfo) hadebugDevice(false);
       checkConnection();

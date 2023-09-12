@@ -1,8 +1,8 @@
 /*The webserver client and its handlers live here*/
 #include "SPIFFS.h"
 extern bool findInConfig(String, int&, int&), processConfigJson(String, String&, bool), processConfigString(String, String&, bool), storeConfigVar(String, int, int);
-extern String returnConfigVar(String, int, int, bool), returnConfig(), returnSvg(), ssidList, releaseChannels(), infoMsg, _user_email;
-extern const char index_html[];
+extern String returnConfigVar(String, int, int, int), returnConfig(), returnBasicConfig(), returnSvg(), ssidList, releaseChannels(), infoMsg, _user_email;
+extern const char index_html[], test_html[], css[];
 extern char apSSID[];
 class WebRequestHandler : public AsyncWebHandler {
 public:
@@ -17,8 +17,8 @@ public:
 };
 
 bool WebRequestHandler::canHandle(AsyncWebServerRequest *request){
-  /*Add custom headers here with request->addInterestingHeader("ANY");*/
-  /*Serial.println("Webrequest");
+  /*Add custom headers here with request->addInterestingHeader("ANY");
+  Serial.println("Webrequest");
   Serial.println(request->method());
   int headers = request->headers();
   int i;
@@ -31,7 +31,7 @@ bool WebRequestHandler::canHandle(AsyncWebServerRequest *request){
 
 void WebRequestHandler::handleBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
   /*Handler for POST and PUT requests (with a body)*/
-  if(request->method() == 2 || request->method() == 4){
+  if(request->method() == 2 || request->method() == 4 || request->method() == 8){
     Serial.print("POST/PUT to ");
     Serial.println(request->url());
     if(len > 1){
@@ -81,7 +81,7 @@ void WebRequestHandler::handleRequest(AsyncWebServerRequest *request){
              storeConfigVar(p->value(), retVarType, retVarNum);
             }
             /*Build a JSON response containing the new value for every updated key, concatenate if there are multiple*/
-            foundInConfig = returnConfigVar(p->name().c_str(), retVarType, retVarNum, true);
+            foundInConfig = returnConfigVar(p->name().c_str(), retVarType, retVarNum, 1);
             if(foundInConfig != ""){
               response += foundInConfig.substring(1, foundInConfig.length()-1);
               response += ",";
@@ -105,10 +105,11 @@ void WebRequestHandler::handleRequest(AsyncWebServerRequest *request){
       request->send(200, "application/json", releaseChannels());
     }
     else if(request->url() == "/svg"){
-      request->send(200, "image/svg+xml", returnSvg());
+      request->send(200, "application/json", returnSvg());
     }
     else if(request->url() == "/info"){
       request->send(200, "text/plain", infoMsg);
+      //request->send(200, "text/plain", "Settings saved");
     }
     else if(request->url() == "/hostname"){
       request->send(200, "text/plain", apSSID);
@@ -118,6 +119,9 @@ void WebRequestHandler::handleRequest(AsyncWebServerRequest *request){
     }
     else if(request->url() == "/test" || request->url() == "/test/"){ //temp, just for SPIFFS testing
       request->send_P(200, "text/html", index_html);
+    }
+    else if(request->url() == "/style.css"){
+      request->send_P(200, "text/css", css);
     }
     else{
       request->send_P(200, "text/html", index_html);

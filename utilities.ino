@@ -1,28 +1,29 @@
 boolean scanWifi(){
+  /*Scan all WiFi networks in range and compile their SSIDs into a JSON array*/
   syslog("Performing wifi scan", 0);
-  int16_t n = WiFi.scanNetworks();
-  String savedSSID = _wifi_ssid;
   boolean foundSavedSSID = false;
-  String buildSSIDlist = "";
+  int16_t n = WiFi.scanNetworks();
+  /*Check if the previously saved SSID is detected.*/
   for (int i = 0; i < n; ++i) {
-    if(WiFi.SSID(i) != savedSSID){
-      buildSSIDlist += "{\"SSID\": \"";
-      buildSSIDlist += WiFi.SSID(i);
-      buildSSIDlist += "\"}";
-      if(i < n - 1) buildSSIDlist += ", ";
-    }
-    else{
-      foundSavedSSID = true; //if the previously saved SSID is detected, make sure to put it first in the option list
+    if(WiFi.SSID(i) = _wifi_ssid){
+      foundSavedSSID = true;
     }
   }
-  buildSSIDlist += "]}";
-  String ssidListStart = "{\"SSIDlist\": [";
+  DynamicJsonDocument doc(1024);
+  JsonArray data = doc.createNestedArray("SSIDlist");
+  int offset = 0;
+  /*If the previously saved SSID is present, put it first in the JSON array so the webmin HTML selects this SSID as the default option to display in the dropdown selection*/
   if(foundSavedSSID){
-    ssidListStart += "{\"SSID\": \"";
-    ssidListStart += savedSSID;
-    ssidListStart += "\"},";
+    data[0]["SSID"] = _wifi_ssid;
+    offset = 1;
   }
-  ssidList = ssidListStart + buildSSIDlist;
+  for (int i = 0; i < n; ++i) {
+    if(WiFi.SSID(i) != _wifi_ssid){
+      data[offset]["SSID"] = WiFi.SSID(i);
+      offset++;
+    }
+  }
+  serializeJson(doc, ssidList);
   wifiScan = false;
   WiFi.scanDelete();
   return foundSavedSSID;
@@ -64,7 +65,7 @@ void initSPIFFS(){
     }
     /*Check SPIFFS file I/O*/
     syslog("Testing SPIFFS file I/O... ", 0);
-    if(!writeFile(SPIFFS, "/test.txt", "Hello ") || !appendFile(SPIFFS, "/test.txt", "World!\r\n")  || !readFile(SPIFFS, "/test.txt")){
+    if(!writeFile(SPIFFS, "/test.txt", "Hello ") || !appendFile(SPIFFS, "/test.txt", "World!\r\n")  || !readFile(SPIFFS, "/test.txt") || !deleteFile(SPIFFS, "/test.txt")){
       syslog("Could not perform file I/O on SPIFFS", 3);
       spiffsMounted = false;
     }
@@ -78,6 +79,7 @@ void initSPIFFS(){
   }
   else if(!_reinit_spiffs && !spiffsMounted){ //if SPIFFS couldn't be mounted, try a restart first
     _reinit_spiffs = true;
+    saveResetReason("Rebooting to retry SPIFFS access");
     saveConfig();
     delay(500);
     ESP.restart();
@@ -113,32 +115,30 @@ void initWifi(){
       setClock(true);
       printLocalTime(true);
       if(client){
-        Serial.println(ESP.getFreeHeap());
         syslog("Setting up TLS/SSL client", 0);
-        Serial.println(ESP.getFreeHeap());
         client->setUseCertBundle(true);
         // Load certbundle from SPIFFS
         File file = SPIFFS.open("/cert/x509_crt_bundle.bin", "r");
-        Serial.println(ESP.getFreeHeap());
         if(!file || file.isDirectory()) {
             syslog("Could not load cert bundle from SPIFFS", 3);
+            client->setUseCertBundle(false);
             bundleLoaded = false;
             unitState = 7;
         }
         // Load loadCertBundle into WiFiClientSecure
         if(file && file.size() > 0) {
             if(!client->loadCertBundle(file, file.size())){
-                Serial.println(ESP.getFreeHeap());
                 syslog("WiFiClientSecure: could not load cert bundle", 3);
+                client->setUseCertBundle(false);
                 bundleLoaded = false;
                 unitState = 7;
             }
         }
         file.close();
-        Serial.println(ESP.getFreeHeap());
       } 
       else {
         syslog("Unable to create SSL client", 2);
+        client->setUseCertBundle(false);
         unitState = 7;
         httpsError = true;
       }
@@ -338,9 +338,11 @@ bool renameFile(fs::FS &fs, const char * path1, const char * path2){
     }
 }
 
-void deleteFile(fs::FS &fs, const char * path){
+bool deleteFile(fs::FS &fs, const char * path){
     if(fs.remove(path)){
+      return true;
     } else {
+      return false;
     }
 }
 
