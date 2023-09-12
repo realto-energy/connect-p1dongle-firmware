@@ -58,7 +58,7 @@ void initSPIFFS(){
     /*Check if SPIFFS contains files*/
     syslog("SPIFFS used bytes/total bytes:" + String(SPIFFS.usedBytes()) +"/" + String(SPIFFS.totalBytes()), 0);
     listDir(SPIFFS, "/", 0);
-    File file = SPIFFS.open("/index.html"); //test a file
+    File file = SPIFFS.open("/syslog.txt"); //test a file
     if(!file || file.isDirectory() || file.size() == 0) {
         syslog("Could not load files from SPIFFS", 3);
         spiffsMounted = false;
