@@ -360,7 +360,7 @@ const char css[] PROGMEM = R"rawliteral(
 
         h2 {
             color: #0F3376;
-            padding: 2vh;
+            padding: 1vh;
         }
         
         .icons {
