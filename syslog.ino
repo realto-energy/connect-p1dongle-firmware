@@ -17,7 +17,6 @@ void syslog(String msg, int level){
   Serial.println(logmsg);
   //bufferSyslog( { std::string(logmsg.c_str()), dtimestamp });
 
-  Serial.println(logmsg);
   if(_mqtt_en && !mqttClientError && !mqttHostError && level > 0 && level < 4){
     DynamicJsonDocument doc(1024);
     doc["friendly_name"] = "System log";
