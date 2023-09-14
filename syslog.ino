@@ -15,7 +15,7 @@ void syslog(String msg, int level){
   else logmsg = logmsg + "MISC: ";
   logmsg = logmsg + msg;
   Serial.println(logmsg);
-  bufferSyslog( { std::string(logmsg.c_str()), dtimestamp });
+  //bufferSyslog( { std::string(logmsg.c_str()), dtimestamp });
 
   if(_mqtt_en && !mqttClientError && !mqttHostError && level > 0 && level < 4){
     DynamicJsonDocument doc(1024);
@@ -49,7 +49,7 @@ void saveResetReason(String rReason){
   }
   _last_reset = _last_reset + rReason;
 }
-
+/*
 bool publishSyslog(SyslogEntry entry) {
   DynamicJsonDocument doc(1024);
   doc["friendly_name"] = "System log";
@@ -145,4 +145,4 @@ void dumpSysLog(size_t lineLimit) {
   // static const char* logFileName0 = "/syslog0.txt";
   dumpSysLogFile(logFileName, lineLimit);
   // dumpSysLogFile(logFileName0);
-}
+}*/
