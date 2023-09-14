@@ -172,7 +172,6 @@ boolean startUpdate(){
 }
 
 boolean finishUpdate(bool restore){
-  if(!v2_fleet){
     if(pls_en){
       detachInterrupt(32);
       detachInterrupt(26);
@@ -310,11 +309,8 @@ boolean finishUpdate(bool restore){
     if(mqttPaused){
       sinceConnCheck = 10000;
     }
-  }
-  else{
-    clientSecureBusy = false;
-    update_finish = false;
-  }
+
+
   saveConfig();
   unitState = 4;
   delay(500);

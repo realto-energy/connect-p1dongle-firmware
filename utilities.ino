@@ -143,6 +143,7 @@ void initWifi(){
         startUpdate();
       }
       if(update_finish){
+        Serial.println("Finishing update");
         unitState = -1;
         finishUpdate(false);
       }
