@@ -47,9 +47,9 @@ boolean checkUpdate(){
     }
     else{
       syslog("No firmware update available", 0);
-      mqttPaused = false;
       if(_mqtt_en) connectMqtt();
     }
+    mqttPaused = false;
     return needUpdate;
   }
 }
@@ -59,7 +59,7 @@ boolean startUpdate(){
     if(fw_ver < onlineVersion || _update_start){
       syslog("Preparing firmware upgrade", 1);
       clientSecureBusy = true;
-      mqttPaused;
+      mqttPaused = true;
       if(mqttclientSecure.connected()){
         syslog("Disconnecting TLS MQTT connection to fetch firmware upgrade", 2);
         mqttclientSecure.disconnect();
@@ -84,6 +84,7 @@ boolean startUpdate(){
               bool canBegin = Update.begin(contentLength);
               // If yes, begin
               if (canBegin) {
+                noInterrupts();
                 unitState = -1;
                 blinkLed();
                 syslog("Beginning firmware upgrade. This may take 2 - 5 mins to complete. Things might be quiet for a while.. Patience!", 2);
@@ -153,7 +154,6 @@ boolean startUpdate(){
       client->stop();
       clientSecureBusy = false;
       if(mqttPaused){
-        mqttPaused = false;
         sinceConnCheck = 10000;
       }
       _update_start = false;
@@ -166,6 +166,7 @@ boolean startUpdate(){
       return false;
     }
     _update_start = false;
+    mqttPaused = false;
     saveConfig();
     delay(500);
     return true;
@@ -175,7 +176,6 @@ boolean startUpdate(){
 boolean finishUpdate(bool restore){
   if(!_v2_fleet){
     clientSecureBusy = true;
-    mqttPaused;
     boolean filesUpdated = false;
     if(mqttclientSecure.connected()){
       syslog("Disconnecting TLS MQTT connection to fetch update", 2);
@@ -313,7 +313,6 @@ boolean finishUpdate(bool restore){
       forcedReset();
     }
     if(mqttPaused){
-      mqttPaused = false;
       sinceConnCheck = 10000;
     }
   }
@@ -321,6 +320,7 @@ boolean finishUpdate(bool restore){
     clientSecureBusy = false;
     _update_finish = false;
   }
+  mqttPaused = false;
   saveConfig();
   //if(unitState < 6) unitState = 5; //what?
   delay(500);

@@ -245,7 +245,7 @@ void checkConnection(){
   }
   if(WiFi.status() == WL_CONNECTED){
     wifiRSSI = WiFi.RSSI();
-    if(_mqtt_en){
+    if(_mqtt_en && !mqttPaused){
       if(mqttPushFails > 5){
         mqttClientError = true;
         syslog("MQTT client connection failed", 4);

@@ -176,7 +176,7 @@ void connectMqtt() {
 
 bool pubMqtt(String topic, String payload, boolean retain){
   bool pushed = false;
-  if(_mqtt_en && !mqttClientError && !mqttHostError){
+  if(_mqtt_en && !mqttClientError && !mqttHostError && !mqttPaused && !clientSecureBusy){
     if(_mqtt_tls){
       if(mqttclientSecure.connected()){
         if(mqttclientSecure.publish(topic.c_str(), payload.c_str(), retain)){
