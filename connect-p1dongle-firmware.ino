@@ -211,7 +211,7 @@ void loop(){
     /*If dongle is connected to wifi*/
     if(!bundleLoaded) restoreSPIFFS();
     if(_mqtt_en){
-      //if(!mqttPaused && !clientSecureBusy) proccessSyslogBuffer();
+      if(!mqttPaused && !clientSecureBusy) proccessSyslogBuffer();
       if(_mqtt_tls){
         mqttclientSecure.loop();
       }
