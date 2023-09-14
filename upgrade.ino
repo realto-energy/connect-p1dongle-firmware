@@ -84,7 +84,6 @@ boolean startUpdate(){
               bool canBegin = Update.begin(contentLength);
               // If yes, begin
               if (canBegin) {
-                noInterrupts();
                 unitState = -1;
                 blinkLed();
                 syslog("Beginning firmware upgrade. This may take 2 - 5 mins to complete. Things might be quiet for a while.. Patience!", 2);

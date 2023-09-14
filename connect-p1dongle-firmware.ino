@@ -121,8 +121,8 @@ struct SyslogEntry {
   unsigned long timestamp;
 };
 
-//std::queue<SyslogEntry> syslogBuffer;
-//static const size_t syslogBufferSize = 100;
+std::queue<SyslogEntry> syslogBuffer;
+static const size_t syslogBufferSize = 100;
 
 void setup(){
   M5.begin(true, false, true);
