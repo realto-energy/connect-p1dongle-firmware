@@ -121,8 +121,8 @@ struct SyslogEntry {
   unsigned long timestamp;
 };
 
-std::queue<SyslogEntry> syslogBuffer;
-static const size_t syslogBufferSize = 100;
+//std::queue<SyslogEntry> syslogBuffer;
+//static const size_t syslogBufferSize = 100;
 
 void setup(){
   M5.begin(true, false, true);
@@ -211,7 +211,7 @@ void loop(){
     /*If dongle is connected to wifi*/
     if(!bundleLoaded) restoreSPIFFS();
     if(_mqtt_en){
-      if(!mqttPaused && !clientSecureBusy) proccessSyslogBuffer();
+      //if(!mqttPaused && !clientSecureBusy) proccessSyslogBuffer();
       if(_mqtt_tls){
         mqttclientSecure.loop();
       }

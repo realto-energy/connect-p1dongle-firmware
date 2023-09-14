@@ -153,7 +153,7 @@ void connectMqtt() {
           mqttclient.subscribe((availabilityTopic+"/set/reboot").c_str());
           mqttclient.subscribe((availabilityTopic+"/set/config").c_str());
         }
-        dumpSysLog(50);
+        //dumpSysLog(50);
         mqttClientError = false;
         if(debugInfo && !mqttWasConnected){
           hadebugDevice(true);
