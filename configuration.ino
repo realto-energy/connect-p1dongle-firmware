@@ -16,6 +16,7 @@ boolean restoreConfig() {
   update_autoCheck = preferences.getBool("UPD_AUTOCHK");
   dev_fleet = preferences.getBool("BETA_FLT");
   alpha_fleet = preferences.getBool("ALPHA_FLT");
+  v2_fleet = preferences.getBool("V2_FLT");
   fw_new = preferences.getUInt("FW_NEW");
   update_start = preferences.getBool("UPD_START");
   update_finish = preferences.getBool("UPD_FINISH");
@@ -104,6 +105,7 @@ boolean saveConfig() {
   preferences.putBool("UPD_AUTOCHK", update_autoCheck);
   preferences.putBool("ALPHA_FLT", alpha_fleet);
   preferences.putBool("BETA_FLT", dev_fleet);
+  preferences.getBool("V2_FLT", v2_fleet);
   preferences.putUInt("FW_NEW", onlineVersion);
   preferences.putBool("UPD_START", update_start);
   preferences.putBool("UPD_FINISH", update_finish);

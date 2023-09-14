@@ -106,7 +106,7 @@ byte mac[6];
 boolean wifiSTA = false;
 boolean rebootReq = false;
 boolean rebootInit = false;
-boolean wifiError, mqttHostError, mqttClientError, mqttWasConnected, httpsError, meterError, eidError, wifiSave, wifiScan, eidSave, mqttSave, haSave, debugInfo, timeconfigured, firstDebugPush, alpha_fleet, dev_fleet;
+boolean wifiError, mqttHostError, mqttClientError, mqttWasConnected, httpsError, meterError, eidError, wifiSave, wifiScan, eidSave, mqttSave, haSave, debugInfo, timeconfigured, firstDebugPush, alpha_fleet, dev_fleet, v2_fleet;
 String dmPowIn, dmPowCon, dmTotCont1, dmTotCont2, dmTotInt1, dmTotInt2, dmActiveTariff, dmVoltagel1, dmVoltagel2, dmVoltagel3, dmCurrentl1, dmCurrentl2, dmCurrentl3, dmGas, dmText, dmAvDem, dmMaxDemM;
 String meterConfig[17];
 int dsmrVersion, trigger_type, trigger_interval;
@@ -157,6 +157,7 @@ void setup(){
   /*Temporary bootstrap*/
   dev_fleet = false;
   alpha_fleet = false;
+  v2_fleet = false;
   saveConfig();
   if(pls_en){
     pinMode(32, INPUT_PULLUP);
