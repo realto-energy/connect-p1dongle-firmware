@@ -151,6 +151,32 @@ const char index_html[] PROGMEM = R"rawliteral(
     </div>
 
     <script>
+        // Helper function to fetch with timeout and retry
+        function fetchWithTimeoutAndRetry(url, options = {}, timeout = 2000, retries = 3) {
+            // Modify the headers to avoid compressed data
+            options.headers = {
+                ...options.headers,
+                'Accept-Encoding': 'identity'
+            };
+        
+            return new Promise((resolve, reject) => {
+                const fetchPromise = fetch(url, options);
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Request timed out')), timeout)
+                );
+        
+                Promise.race([fetchPromise, timeoutPromise])
+                    .then(resolve)
+                    .catch(error => {
+                        if (retries === 0) {
+                            reject(error);
+                        } else {
+                            console.log(`Retrying... (${retries} attempts left)`);
+                            resolve(fetchWithTimeoutAndRetry(url, options, timeout, retries - 1));
+                        }
+                    });
+            });
+        }
         var coll = document.getElementsByClassName("collapsible"); //animate the collapsibles
         for (var i = 0; i < coll.length; i++) {
             coll[i].addEventListener("click", function() {
@@ -165,7 +191,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         }
         document.addEventListener("DOMContentLoaded", function() {
               // Fetch SVG images
-              fetch('/svg')
+              fetchWithTimeoutAndRetry('/svg')
                 .then(response => response.json())
                 .then(data => {
                     const wifiImg = document.getElementById('wifi');
@@ -195,7 +221,7 @@ const char index_html[] PROGMEM = R"rawliteral(
                     externalioImg.alt = data.externalio.alt; // New
                     externalioImg.title = data.externalio.alt; // New
             
-                    return fetch('/wifi');
+                    return fetchWithTimeoutAndRetry('/wifi');
                 })
                 // Fetch the SSID list and populate the dropdown
                 .then(response => response.json())
@@ -209,7 +235,7 @@ const char index_html[] PROGMEM = R"rawliteral(
                     });
 
                     // Fetch the release channels and populate the dropdown
-                    return fetch('/releasechan');
+                    return fetchWithTimeoutAndRetry('/releasechan');
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -222,7 +248,7 @@ const char index_html[] PROGMEM = R"rawliteral(
                     });
 
                     // After populating the dropdowns, fetch the configuration data
-                    return fetch('/config');
+                    return fetchWithTimeoutAndRetry('/config');
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -272,6 +298,7 @@ const char index_html[] PROGMEM = R"rawliteral(
                 })
                 .catch(error => {
                     console.error('Error fetching or processing data:', error);
+                    document.getElementById('infoMessage').textContent = "Error loading data, please refresh the page";
                 });
             // Mark password fields as changed when their value is modified
             const passwordFields = document.querySelectorAll('input[type="password"]');
@@ -359,8 +386,11 @@ const char css[] PROGMEM = R"rawliteral(
         }
 
         h2 {
-            color: #0F3376;
+            color: #1fa3ec;
             padding: 1vh;
+        }
+        h3 {
+            color: #1fa3ec;
         }
         
         .icons {
