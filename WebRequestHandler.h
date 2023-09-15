@@ -123,6 +123,12 @@ void WebRequestHandler::handleRequest(AsyncWebServerRequest *request){
     else if(request->url() == "/style.css"){
       request->send_P(200, "text/css", css);
     }
+    else if(request->url() == "/syslog"){
+      request->send(SPIFFS, "/syslog.txt", "text/plain");
+    }
+    else if(request->url() == "/syslog0"){
+      request->send(SPIFFS, "/syslog0.txt", "text/plain");
+    }
     else{
       request->send_P(200, "text/html", index_html);
     }

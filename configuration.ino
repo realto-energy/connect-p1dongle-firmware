@@ -502,6 +502,7 @@ boolean isNumeric(String &varValue, long &longValue, unsigned long &ulongValue, 
 
 String returnConfig(){
   /*Return the entire NVS configuration as one single JSON string*/
+  Serial.println("Compiling config");
   String jsonOutput;
   DynamicJsonDocument doc(5120);
   JsonObject hostVar  = doc.createNestedObject("HOSTNAME");
