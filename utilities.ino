@@ -259,11 +259,11 @@ void checkConnection(){
 
 void setReboot(){
   sinceConnCheck = 0;
-  syslog("Removing Home Assistant entities", 0);
+  //syslog("Removing Home Assistant entities", 0);
   //haAutoDiscovery(3); CHECKTHIS
-  syslog("Saving configuration", 0);
+  //syslog("Saving configuration", 0);
   saveConfig();
-  preferences.end();
+  //preferences.end();
   SPIFFS.end();
   rebootInit = true;
   sinceRebootCheck = 0;

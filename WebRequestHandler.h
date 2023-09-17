@@ -2,8 +2,9 @@
 #include "SPIFFS.h"
 extern bool findInConfig(String, int&, int&), processConfigJson(String, String&, bool), processConfigString(String, String&, bool), storeConfigVar(String, int, int);
 extern String returnConfigVar(String, int, int, int), returnConfig(), returnBasicConfig(), returnSvg(), ssidList, releaseChannels(), infoMsg, _user_email;
-extern const char index_html[], test_html[], css[];
+extern const char index_html[], reboot_html[], test_html[], css[];
 extern char apSSID[];
+extern void setReboot();
 class WebRequestHandler : public AsyncWebHandler {
 public:
   WebRequestHandler() {}
@@ -119,6 +120,13 @@ void WebRequestHandler::handleRequest(AsyncWebServerRequest *request){
     }
     else if(request->url() == "/test" || request->url() == "/test/"){ //temp, just for SPIFFS testing
       request->send_P(200, "text/html", index_html);
+    }
+    else if(request->url() == "/reboot.html"){
+      request->send_P(200, "text/html", reboot_html);
+    }
+    else if(request->url() == "/reboot"){
+      request->send_P(200, "text/html", reboot_html);
+      setReboot();
     }
     else if(request->url() == "/style.css"){
       request->send_P(200, "text/css", css);

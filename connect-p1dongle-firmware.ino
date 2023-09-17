@@ -19,7 +19,6 @@
 #include "ArduinoJson.h"
 #include <elapsedMillis.h>
 
-#include <queue>
 unsigned int fw_ver = 205;
 
 /*V2.0 declarations*/
@@ -115,12 +114,6 @@ bool haDiscovered = false;
 boolean timeSet, spiffsMounted;
 
 uint8_t prevButtonState = false;
-
-struct SyslogEntry {
-  std::string msg;
-  unsigned long timestamp;
-};
-
 
 void setup(){
   M5.begin(true, false, true);

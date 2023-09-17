@@ -82,6 +82,7 @@ void pushSyslog(int numLines) {
         if (c == '\n') {
             if (lineCount >= numLines) break; // Stop after reading the specified number of lines
             // Check if the line ends with a 0
+            char lastChar = lineBuf.charAt(lineBuf.length() - 2);
             if (lastChar == '0') {
                 // Extracting the log message without the trailing ", 0"
                 String logmsg = lineBuf.substring(0, lineBuf.length() - 3);

@@ -145,6 +145,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             </div>
             <input type="submit" class="submit" value="Submit">
         </form>
+        <a href="/reboot.html" class="reboot">Reboot</a>
         <footer>
             <a href='https://realto.io' target='_blank' id="footerLink">Digital meter dongle by re.alto & plan-d.io</a>
         </footer>
@@ -377,6 +378,56 @@ const char index_html[] PROGMEM = R"rawliteral(
 
 )rawliteral";
 
+const char reboot_html[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="style.css">
+    <title>Digital meter - Reboot</title>
+</head>
+
+<body>
+    <div class="container">
+            <div class="content" style="display: block;">
+            <h2>The digital meter dongle is rebooting.</h3></p>
+            <div class="loader"></div> 
+            <h3>You can close this window.</h3></p>  
+            </div>
+        <footer>
+            <a href='https://realto.io' target='_blank' id="footerLink">Digital meter dongle by re.alto & plan-d.io</a>
+        </footer>
+        </div>
+    </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Function to make a request to the /reboot endpoint
+      function requestReboot() {
+        fetch('/reboot')
+          .then(response => {
+            if (response.ok) {
+              console.log('Successfully requested reboot.');
+            } else {
+              console.error('Error requesting reboot:', response.statusText);
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching /reboot:', error);
+          });
+      }
+
+      // Call the requestReboot function
+      requestReboot();
+    });
+  </script>
+</body>
+
+</html>
+
+)rawliteral";
+
 const char css[] PROGMEM = R"rawliteral(
         body {
             font-family: Helvetica, verdana, sans-serif;
@@ -494,14 +545,34 @@ const char css[] PROGMEM = R"rawliteral(
             color: white;
             padding: 10px 20px;
             margin: 20px 0; /* Separation from other content */
+            margin-bottom: 5px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 1.2rem;
         }
-
         .submit:hover {
             background-color: #5aaf6f; /* Darker green on hover */
+        }
+        .reboot {
+            display: inline-block; /* Make the link behave like a block element */
+            width: 600px;
+            box-sizing: border-box; 
+            background-color: #8B0000; /* Red background */
+            color: white;
+            padding: 10px 20px;
+            margin: 20px 0; /* Separation from other content */
+            margin-top: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            text-align: center; /* Center the text */
+            text-decoration: none; /* Remove the underline from the link */
+        }
+        
+        .reboot:hover {
+            background-color: #5aaf6f; /* Darker red on hover */
         }
         .svg-container {
             display: flex;
@@ -517,6 +588,34 @@ const char css[] PROGMEM = R"rawliteral(
         }
         footer {
             text-align: right;
+        }
+
+        .loader {
+            margin: auto;
+            border: 16px solid #1f1f1f; /* Light grey */
+            border-top: 16px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            -webkit-animation: spin 1s linear infinite; /* Safari and Chrome */
+            -moz-animation: spin 1s linear infinite; /* Firefox */
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @-webkit-keyframes spin { /* Safari and Chrome */
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+        
+        @-moz-keyframes spin { /* Firefox */
+            0% { -moz-transform: rotate(0deg); }
+            100% { -moz-transform: rotate(360deg); }
+        }
         })rawliteral";
 
  const char test_html[] PROGMEM = {'\n'};
