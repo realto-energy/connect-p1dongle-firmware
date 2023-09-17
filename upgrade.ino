@@ -46,7 +46,7 @@ boolean checkUpdate(){
       syslog("Firmware update available", 1);
     }
     else{
-      syslog("No firmware update available", 0);
+      syslog("No firmware update available", 1);
       if(_mqtt_en) connectMqtt();
     }
     mqttPaused = false;

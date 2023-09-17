@@ -36,7 +36,7 @@ void setupMqtt() {
       }
     }
     else {
-      syslog("Trying to resolve MQTT host " + _mqtt_host + " to IP address", 1);
+      syslog("Resolving MQTT host " + _mqtt_host + " to IP address", 1);
       int dotLoc = _mqtt_host.lastIndexOf('.');
       String tld = _mqtt_host.substring(dotLoc+1);
       if(dotLoc == -1 || tld == "local"){
@@ -153,8 +153,8 @@ void connectMqtt() {
           mqttclient.subscribe((availabilityTopic+"/set/reboot").c_str());
           mqttclient.subscribe((availabilityTopic+"/set/config").c_str());
         }
-        //dumpSysLog(50);
         mqttClientError = false;
+        pushSyslog(30);
         if(debugInfo && !mqttWasConnected){
           hadebugDevice(true);
           delay(500);

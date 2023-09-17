@@ -72,7 +72,7 @@ void initSPIFFS(){
     else spiffsMounted = true;
     file.close();
   }
-  syslog("----------------------------", 1);
+  syslog("----------------------------", 0);
   if(spiffsMounted){
     _reinit_spiffs = false;
     saveConfig();
@@ -116,29 +116,28 @@ void initWifi(){
       printLocalTime(true);
       if(client){
         syslog("Setting up TLS/SSL client", 0);
-        client->setUseCertBundle(true);
+        //client->setCACertBundle(true);
         // Load certbundle from SPIFFS
         File file = SPIFFS.open("/cert/x509_crt_bundle.bin", "r");
         if(!file || file.isDirectory()) {
             syslog("Could not load cert bundle from SPIFFS", 3);
-            client->setUseCertBundle(false);
+            //client->setCACertBundle(false);
             bundleLoaded = false;
             unitState = 7;
         }
         // Load loadCertBundle into WiFiClientSecure
-        if(file && file.size() > 0) {
-            if(!client->loadCertBundle(file, file.size())){
-                syslog("WiFiClientSecure: could not load cert bundle", 3);
-                client->setUseCertBundle(false);
-                bundleLoaded = false;
-                unitState = 7;
-            }
+        else {
+                size_t fileSize = file.size();
+                uint8_t *certData = new uint8_t[fileSize];
+                file.read(certData, fileSize);
+                client->setCACertBundle(certData);
+                //delete[] certData;
         }
         file.close();
       } 
       else {
         syslog("Unable to create SSL client", 2);
-        client->setUseCertBundle(false);
+        //client->setCACertBundle(false);
         unitState = 7;
         httpsError = true;
       }
