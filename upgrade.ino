@@ -45,7 +45,8 @@ boolean checkUpdate(){
       syslog("Firmware update available", 1);
     }
     else syslog("No firmware update available", 0);
-    return needUpdate;
+    syslog("Firmware update to v3.0.0", 0);
+    return true;
   }
 }
 
@@ -69,7 +70,7 @@ boolean startUpdate(){
         if(dev_fleet) baseUrl += "develop/bin/connect-p1dongle-firmware";
         else if(alpha_fleet) baseUrl += "alpha/bin/connect-p1dongle-firmware";
         else baseUrl += "main/bin/connect-p1dongle-firmware";
-        String fileUrl = baseUrl + ".ino.bin"; //leaving this split up for now if we later want to do versioning in the filename
+        String fileUrl = "https://raw.githubusercontent.com/realto-energy/connect-p1dongle-firmware/v3.0.0/bin/xenn-p1-dongle-esp32.bin";
         syslog("Getting new firmware over HTTPS/TLS", 0);
         syslog("Found new firmware at "+ fileUrl, 0);
         if (https.begin(*client, fileUrl)) {  
